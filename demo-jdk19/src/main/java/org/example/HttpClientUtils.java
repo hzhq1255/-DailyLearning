@@ -4,6 +4,7 @@ import org.json.JSONObject;
 
 import javax.net.ssl.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -18,6 +19,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -100,6 +102,10 @@ public class HttpClientUtils {
         // return String.format("%s", o);
     }
 
+    private static <T> T JSONStringToObj(String s, Class<T> clazz){
+        return (T) JSONObject.stringToValue(s);
+    }
+
     private static String getParamsAsString(Map<String, String> params){
         StringBuilder stringBuilder = new StringBuilder();
         for (Map.Entry<String, String> entry: params.entrySet()){
@@ -122,8 +128,17 @@ public class HttpClientUtils {
                 .toArray(String[]::new);
     }
 
+    private static String getQueryAsString(Map<String, String> query){
+        return (Optional.ofNullable(query).isPresent() ? "?" : "") + Optional.ofNullable(query)
+                .map(Map::entrySet)
+                .orElse(new HashSet<>())
+                .stream()
+                .map(e-> String.format("%s=%s", URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8), URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8)))
+                .collect(Collectors.joining("&"));
+    }
+
     private static String getRequestBodyAsString(Map<String, String> headers, Map<String, String> params, Object body){
-        String contentType = Optional.ofNullable(headers).orElse(new HashMap<String, String>())
+        String contentType = Optional.ofNullable(headers).orElse(new HashMap<>())
                 .entrySet()
                 .stream()
                 .collect(Collectors.toMap(e->e.getKey().toLowerCase(), Map.Entry::getValue))
@@ -141,17 +156,41 @@ public class HttpClientUtils {
                 sslClient : httpClient;
     }
 
+    private static <T> HttpResponse.BodyHandler<T> handleBody(Class<T> clazz){
+        if (clazz == String.class){
+            return (HttpResponse.BodyHandler<T>) HttpResponse.BodyHandlers.ofString();
+        } else if (clazz == byte[].class){
+            return (HttpResponse.BodyHandler<T>) HttpResponse.BodyHandlers.ofByteArray();
+        } else if (clazz == InputStream.class){
+            return (HttpResponse.BodyHandler) HttpResponse.BodyHandlers.ofInputStream();
+        } else {
+            throw new UnsupportedOperationException(String.format("unsupported type %s", clazz));
+        }
+    }
 
+
+    private static HttpRequest buildGetRequest(String url, Map<String, String> headers, Map<String, String> query) throws IOException, InterruptedException{
+        return HttpRequest.newBuilder()
+                .uri(URI.create(url + getQueryAsString(query)))
+                .headers(getHttpHeadersAsStringArray(headers))
+                .GET()
+                .build();
+    }
+
+    public static <T> HttpResponse<T> get(String url, Map<String, String> querys, Class<T> clazz) throws IOException, InterruptedException{
+        return getClient(url).send(HttpRequest.newBuilder()
+                .uri(URI.create()))
+    }
 
 
 
     public static <T> HttpResponse<T> get(String url, Map<String, String> headers,Map<String, String> query, Map<String, String> params, String body, Class<T> clazz) throws IOException, InterruptedException {
         HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(url))
+                .uri(URI.create(url + getQueryAsString(query)))
                 .headers(getHttpHeadersAsStringArray(headers))
                 .POST(HttpRequest.BodyPublishers.ofString(getRequestBodyAsString(headers, params, body)))
                 .build();
-        return getClient(url).send(httpRequest, );
+        return getClient(url).send(httpRequest, handleBody(clazz));
     }
 
     public static void main(String[] args) {
