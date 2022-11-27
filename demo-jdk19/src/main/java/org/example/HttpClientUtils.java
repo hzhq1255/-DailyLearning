@@ -179,7 +179,7 @@ public class HttpClientUtils {
 
     public static <T> HttpResponse<T> get(String url, Map<String, String> querys, Class<T> clazz) throws IOException, InterruptedException{
         return getClient(url).send(HttpRequest.newBuilder()
-                .uri(URI.create()))
+                .uri(URI.create()));
     }
 
 
