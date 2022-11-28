@@ -2,6 +2,7 @@ package org.example.myutil.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.util.Map;
@@ -35,13 +36,24 @@ public class JsonUtils {
         return UNCHECKED_OBJECT_MAPPER.writeValueAsString(o);
     }
 
+
+    public static <T> T convertObj(Object o, TypeReference<T> typeReference){
+        return UNCHECKED_OBJECT_MAPPER.convertValue(o, typeReference);
+    }
+
+
     public static boolean isJSONValid(String json){
         return UNCHECKED_OBJECT_MAPPER.isJSON(json);
     }
 
 
 
-    public static class UncheckedObjectMapper extends ObjectMapper {
+    private static class UncheckedObjectMapper extends ObjectMapper {
+
+        public UncheckedObjectMapper() {
+            super();
+        }
+
         /**
          * Parses the given JSON string into a given type
          */
