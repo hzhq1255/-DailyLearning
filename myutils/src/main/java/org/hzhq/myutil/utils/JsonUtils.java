@@ -1,4 +1,4 @@
-package org.example.myutil.utils;
+package org.hzhq.myutil.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
