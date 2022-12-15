@@ -38,18 +38,7 @@ func getConfig() (config *rest.Config) {
 }
 
 func GetK8sClient() *kubernetes.Clientset {
-	var kubeconfig, master string
-	if home := homedir.HomeDir(); home != "" {
-		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "absolute path to kubeconfig file")
-	} else {
-		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to kubeconfig file")
-	}
-	flag.StringVar(&master, "master", "", "master url")
-	flag.Parse()
-	config, err := clientcmd.BuildConfigFromFlags(master, kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
+	config := getConfig()
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
