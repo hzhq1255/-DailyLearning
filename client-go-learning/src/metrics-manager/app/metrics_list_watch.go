@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"google.golang.org/appengine/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/klog/v2"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"metrics-manager/pkg"
 	"strconv"
@@ -42,7 +42,7 @@ func nodeMetricsWatch() {
 						nodeMetrics.Usage.Cpu(), nodeMetrics.Usage.Memory(), nodeMetrics.Usage.Pods(), nodeMetrics.Usage.StorageEphemeral())
 					node, err := k8sclient.CoreV1().Nodes().Get(context.TODO(), nodeMetrics.Name, metav1.GetOptions{})
 					if err != nil {
-						log.Errorf(context.TODO(), "when set usage list node failed!")
+						klog.Errorf("when set usage list node failed!")
 						return
 					}
 					annotations := node.ObjectMeta.Annotations
@@ -54,7 +54,7 @@ func nodeMetricsWatch() {
 					usage[v1.ResourceMemory] = strconv.FormatInt(nodeMetrics.Usage.Memory().Value(), 10)
 					usageJson, err := json.Marshal(usage)
 					if err != nil {
-						log.Errorf(context.TODO(), "when json  node usage failed!")
+						klog.Errorf("when json  node usage failed!")
 						return
 					}
 					annotations[USAGE_ANNOTATION] = string(usageJson)
