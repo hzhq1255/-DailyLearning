@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-controller
+  labels:
+    app: metrics-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-controller
+  template:
+    metadata:
+      name: metrics-controller
+      labels:
+        app: metrics-controller
+    spec:
+      serviceAccountName: metrics-controller-sa
+      containers:
+        - name: metrics-controller
+          image: hzhq1255/metrics-controller:v1
+          imagePullPolicy: Always
+#          volumeMounts:
+#            - name: kubeconfig
+#              mountPath: /root/.kube
+      restartPolicy: Always
+      volumes:
+        - name: kubeconfig
+          configMap:
+            name: kubeconfig
+            items:
+              - key: config
+                path: config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeconfig
+data:
+  config: |-
+    apiVersion: v1
+    clusters:
+      - cluster:
+          certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkekNDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdGMyVnkKZG1WeUxXTmhRREUyTnpBeU5ETTFNREl3SGhjTk1qSXhNakExTVRJek1UUXlXaGNOTXpJeE1qQXlNVEl6TVRReQpXakFqTVNFd0h3WURWUVFEREJock0zTXRjMlZ5ZG1WeUxXTmhRREUyTnpBeU5ETTFNREl3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFTS1QrY3JsK3ZHaS9KKzEvcDhzVi9pS0R6bGNhZTE2SFR2Rm52cmRsR2wKUFlGS3ZIbnBUcW42eEQ2OFVPTWNBbnRkMG5XYzJnVGpNY1BidUZWb1YzOXFvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVUVsQ0JReFBobW5admtwMit2emdWClNBUWlNTGN3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUlqbVlnOTBlOGhPSWNPT08zN2ZkRktlVTdnWmNRR3oKdzNUNExTemFMSW1yQWlBdDR6UDlBZzFrMDIvRm9uS0gzRnl2VTh4RDRDSjFNQ2k1UFJxRDVHUFRqZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+          server: https://kubernetes.default:443
+        name: k3d-mycluster
+    contexts:
+      - context:
+          cluster: k3d-mycluster
+          user: admin@k3d-mycluster
+        name: k3d-mycluster
+    current-context: k3d-mycluster
+    kind: Config
+    preferences: {}
+    users:
+      - name: admin@k3d-mycluster
+        user:
+          client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJrVENDQVRlZ0F3SUJBZ0lJTFhhcVFUL3YyMEl3Q2dZSUtvWkl6ajBFQXdJd0l6RWhNQjhHQTFVRUF3d1kKYXpOekxXTnNhV1Z1ZEMxallVQXhOamN3TWpRek5UQXlNQjRYRFRJeU1USXdOVEV5TXpFME1sb1hEVEl6TVRJdwpOVEV5TXpFME5Gb3dNREVYTUJVR0ExVUVDaE1PYzNsemRHVnRPbTFoYzNSbGNuTXhGVEFUQmdOVkJBTVRESE41CmMzUmxiVHBoWkcxcGJqQlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQTBJQUJCZit1RnZvcmwrc1k4bm8Kd05WMk9pbVF2aTl2UmhScG9zWlRzWFRsd0hZU3FUcjhIazE1ZnR0aWRpNSszRTNIbms4SXhneDlta3FBOS9jMApFQmc0NVVxalNEQkdNQTRHQTFVZER3RUIvd1FFQXdJRm9EQVRCZ05WSFNVRUREQUtCZ2dyQmdFRkJRY0RBakFmCkJnTlZIU01FR0RBV2dCUTZmK1VKZmhhZEtGTGtPWkNobVBqR2E5ajk4ekFLQmdncWhrak9QUVFEQWdOSUFEQkYKQWlFQWpKY3M1UlQ2Z25KOUl3UnlwMzFvYVVwRVU2UUQ4WGdxcHhsRGNPdzdxQkFDSUR1QytPQXA4WU1yak5BdQpPMEJ6bGd0dkVzallrU29NSFVnQzdUa214WVZMCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkakNDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdFkyeHAKWlc1MExXTmhRREUyTnpBeU5ETTFNREl3SGhjTk1qSXhNakExTVRJek1UUXlXaGNOTXpJeE1qQXlNVEl6TVRReQpXakFqTVNFd0h3WURWUVFEREJock0zTXRZMnhwWlc1MExXTmhRREUyTnpBeU5ETTFNREl3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFTTGdLcjY0YUJNZm9RMDRPNFBZbGpNL2UyQ0hNQ1k2K0VIYW1EZTl0MDAKMHVKWXJjd1p1ZjdOeTk1VTlkZG1sLzlwUGZ3Q0xkaTZONkdpWHRMU3JaeHZvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVU9uL2xDWDRXblNoUzVEbVFvWmo0CnhtdlkvZk13Q2dZSUtvWkl6ajBFQXdJRFJ3QXdSQUlnUzVNMkRCbk8wVitSRm5NN2pxbFlHY2c4T0VHTWRzUEkKVUxCb1djNW5hRGNDSUV3eDQwSkZFMXpzRXYydVhDbUdMNnBYTjVOZFFZUWRhbXRqYjN1WG5OLzYKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+          client-key-data: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUU0R1ZycnppY0tDTmZKSFMxanovT2xWOUlHeUpkYWgzQzkzS24vWFp3UlJvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFRi82NFcraXVYNnhqeWVqQTFYWTZLWkMrTDI5R0ZHbWl4bE94ZE9YQWRoS3BPdndlVFhsKwoyMkoyTG43Y1RjZWVUd2pHREgyYVNvRDM5elFRR0RqbFNnPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-controller-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metrics-controller-read
+rules:
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-controller
+subjects:
+  - kind: ServiceAccount
+    name: metrics-controller-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: metrics-controller-read
+  apiGroup: rbac.authorization.k8s.io
+
+
