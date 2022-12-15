@@ -16,6 +16,7 @@ import (
 	"k8s.io/klog/v2"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"metrics-manager/pkg"
+	myutil "metrics-manager/pkg/util"
 	"strconv"
 	"time"
 )
@@ -23,6 +24,7 @@ import (
 const (
 	UsageAnnotation  = "usage"
 	DefaultNamespace = "default"
+	KeyNodePrefix    = "node-"
 )
 
 func nodeMetricsWatch() {
@@ -44,11 +46,11 @@ func nodeMetricsWatch() {
 				if nodeMetrics, ok := newObj.(*metricsv1beta1.NodeMetrics); ok {
 					fmt.Printf("cpu usgae = %v, memory usage = %v, pods usage = %v storage usage = %v\n",
 						nodeMetrics.Usage.Cpu(), nodeMetrics.Usage.Memory(), nodeMetrics.Usage.Pods(), nodeMetrics.Usage.StorageEphemeral())
-					//_, err := k8sclient.CoreV1().Nodes().Get(context.TODO(), nodeMetrics.Name, metav1.GetOptions{})
-					//if err != nil {
-					//	klog.Errorf("when set usage list node failed! cased by %v", err.Error())
-					//	return
-					//}
+					node, err := k8sclient.CoreV1().Nodes().Get(context.TODO(), nodeMetrics.Name, metav1.GetOptions{})
+					if err != nil {
+						klog.Errorf("when set usage list node failed! cased by %v", err.Error())
+						return
+					}
 					usage := make(map[v1.ResourceName]string, 2)
 					usage[v1.ResourceCPU] = strconv.FormatInt(nodeMetrics.Usage.Cpu().MilliValue(), 10)
 					usage[v1.ResourceMemory] = strconv.FormatInt(nodeMetrics.Usage.Memory().Value(), 10)
@@ -80,7 +82,7 @@ func nodeMetricsWatch() {
 					}
 					klog.Infof("new node annotations %v", r.ObjectMeta.Annotations)
 
-					_, err = applyUsageConfigMap(*nodeMetrics)
+					_, err = applyUsageConfigMap(*nodeMetrics, *node)
 				}
 			},
 		},
@@ -89,7 +91,11 @@ func nodeMetricsWatch() {
 	s.List()
 }
 
-func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics) (*pkg.ClusterResourceUsages, error) {
+func getRequestsAndLimits() {
+
+}
+
+func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics, node v1.Node) (*pkg.ClusterResourceUsages, error) {
 	k8sclient := pkg.GetK8sClient()
 	usageCmName := "cluster-usage-cm"
 	usageCm, err := k8sclient.CoreV1().ConfigMaps(DefaultNamespace).Get(context.TODO(), usageCmName, metav1.GetOptions{})
@@ -101,22 +107,81 @@ func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics) (*pkg.ClusterRe
 		klog.Errorf("get cm error %s", err)
 		return nil, err
 	}
-	cpuVal, memVal := nodeMetrics.Usage.Cpu().MilliValue(), nodeMetrics.Usage.Memory().Value()
-	usageMap := map[v1.ResourceName]string{
-		v1.ResourceCPU:    strconv.FormatInt(cpuVal, 10),
-		v1.ResourceMemory: strconv.FormatInt(memVal, 10),
+	allocatable := node.Status.Allocatable
+	if len(allocatable) == 0 {
+		allocatable = node.Status.Capacity
 	}
-	usageMapJson, _ := json.Marshal(usageMap)
+
+	cpuVal, memVal := nodeMetrics.Usage.Cpu().MilliValue(), nodeMetrics.Usage.Memory().Value()
+	podList, err := k8sclient.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
+		FieldSelector: "spec.nodeName=" + nodeMetrics.Name,
+	})
+	filteredPodList := &v1.PodList{}
+	for _, pod := range podList.Items {
+		if pod.Status.Phase != v1.PodSucceeded && pod.Status.Phase != v1.PodFailed {
+			filteredPodList.Items = append(filteredPodList.Items, pod)
+		}
+	}
+	reqs, limits := myutil.GetPodsTotalRequestsAndLimits(filteredPodList)
+
+	if err != nil {
+		klog.Errorf("get pod list failed")
+	}
+	//usageMap := map[v1.ResourceName]string{
+	//	v1.ResourceCPU:    strconv.FormatInt(cpuVal, 10),
+	//	v1.ResourceMemory: strconv.FormatInt(memVal, 10),
+	//}
+
+	//usageMapJson, _ := json.Marshal(usageMap)
+	nodeResourceUsages := pkg.ResourceUsages{
+		CPU: func() pkg.ResourceUsage {
+			req, limit := reqs[v1.ResourceCPU], limits[v1.ResourceCPU]
+			return pkg.ResourceUsage{
+				Reqs:        req.MilliValue(),
+				Limits:      limit.MilliValue(),
+				Allocatable: allocatable.Cpu().MilliValue(),
+				Usage:       nodeMetrics.Usage.Cpu().MilliValue(),
+			}
+		}(),
+		Memory: func() pkg.ResourceUsage {
+			req, limit := reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
+			return pkg.ResourceUsage{
+				Reqs:        req.Value(),
+				Limits:      limit.Value(),
+				Allocatable: allocatable.Memory().Value(),
+				Usage:       nodeMetrics.Usage.Memory().Value(),
+			}
+		}(),
+		EphemeralStorage: func() pkg.ResourceUsage {
+			req, limit := reqs[v1.ResourceEphemeralStorage], limits[v1.ResourceEphemeralStorage]
+			return pkg.ResourceUsage{
+				Reqs:        req.Value(),
+				Limits:      limit.Value(),
+				Allocatable: allocatable.StorageEphemeral().Value(),
+				Usage:       req.Value(),
+			}
+		}(),
+		PodNum: func() pkg.ResourceUsage {
+			return pkg.ResourceUsage{
+				Allocatable: allocatable.StorageEphemeral().Value(),
+				Usage:       int64(len(podList.Items)),
+			}
+		}(),
+	}
+	nodeResourceUsagesJson, _ := json.Marshal(nodeResourceUsages)
+
 	if cmNotFound {
 		usageCm = &v1.ConfigMap{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: "v1",
 				Kind:       "ConfigMap",
 			},
-			ObjectMeta: metav1.ObjectMeta{},
-			Immutable:  nil,
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      usageCmName,
+				Namespace: DefaultNamespace,
+			},
 			Data: map[string]string{
-				"node" + nodeMetrics.Name: string(usageMapJson),
+				KeyNodePrefix + nodeMetrics.Name: string(nodeResourceUsagesJson),
 			},
 		}
 		_, err := k8sclient.CoreV1().ConfigMaps(DefaultNamespace).Create(context.TODO(), usageCm, metav1.CreateOptions{})
@@ -129,7 +194,7 @@ func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics) (*pkg.ClusterRe
 		if data == nil {
 			data = make(map[string]string)
 		}
-		data["node"+nodeMetrics.Name] = string(usageMapJson)
+		data[KeyNodePrefix+nodeMetrics.Name] = string(nodeResourceUsagesJson)
 		_, err := k8sclient.CoreV1().ConfigMaps(DefaultNamespace).Update(context.TODO(), usageCm, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorf("update cluster usage map failed %v", err.Error())
