@@ -48,11 +48,12 @@ type NodeMetricsReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodemetrics,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodemetrics/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodemetrics/finalizers,verbs=update
+//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=create;update;delete
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -134,7 +135,7 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 		if existedItem != nil {
 			existedItem.Data = v.Data
-			if err := r.Client.Update(ctx, existedItem); err != nil {
+			if err := r.Client.Update(ctx, existedItem.DeepCopy()); err != nil {
 				klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
 				return ctrl.Result{}, err
 
