@@ -1,0 +1,12 @@
+#apiVersion: metrics.k8s.io.example.com/v1beta1
+#kind: NodeMetrics
+#metadata:
+#  labels:
+#    app.kubernetes.io/name: nodemetrics
+#    app.kubernetes.io/instance: nodemetrics-sample
+#    app.kubernetes.io/part-of: kubebuiler-demo
+#    app.kuberentes.io/managed-by: kustomize
+#    app.kubernetes.io/created-by: kubebuiler-demo
+#  name: nodemetrics-sample
+#spec:
+#  # TODO(user): Add fields here
