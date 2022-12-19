@@ -51,7 +51,7 @@ type NodeMetricsReconciler struct {
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=configmaps,verbs=create;update;delete
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update;delete
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
 
@@ -134,8 +134,7 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		}
 		if existedItem != nil {
-			existedItem.Data = v.Data
-			if err := r.Client.Update(ctx, existedItem.DeepCopy()); err != nil {
+			if err := r.Client.Update(ctx, v.DeepCopy()); err != nil {
 				klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
 				return ctrl.Result{}, err
 

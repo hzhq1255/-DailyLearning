@@ -22,9 +22,17 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - metrics.k8s.io
   resources:
-  - nodemetrics
+  - nodes
   verbs:
   - create
   - delete
@@ -36,13 +44,13 @@ rules:
 - apiGroups:
   - metrics.k8s.io
   resources:
-  - nodemetrics/finalizers
+  - nodes/finalizers
   verbs:
   - update
 - apiGroups:
   - metrics.k8s.io
   resources:
-  - nodemetrics/status
+  - nodes/status
   verbs:
   - get
   - patch
