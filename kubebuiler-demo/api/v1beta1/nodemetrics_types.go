@@ -63,7 +63,7 @@ import (
 //}
 
 func init() {
-	SchemeBuilder.Register()
+	//SchemeBuilder.Register()
 }
 
 func addKnownTypes(scheme *runtime.Scheme) error {

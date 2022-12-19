@@ -51,7 +51,7 @@ type NodeMetricsReconciler struct {
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=metrics.k8s.io,resources=nodes/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update;delete
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;delete
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
 

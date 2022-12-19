@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: hzhq1255/kubebuilder-demo
-  newTag: v1
+  newTag: v2
