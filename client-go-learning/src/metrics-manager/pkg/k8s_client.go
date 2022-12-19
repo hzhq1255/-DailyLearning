@@ -14,15 +14,21 @@ import (
 	"path/filepath"
 )
 
-func getConfig() (config *rest.Config) {
-	var kubeconfig, master string
+var staticConfig *rest.Config
+
+func getConfig() *rest.Config {
+	if staticConfig != nil {
+		return staticConfig
+	}
 	if host := os.Getenv("KUBERNETES_SERVICE_HOST"); host != "" {
 		clusterconfig, err := rest.InClusterConfig()
 		if err != nil {
 			panic(err.Error())
 		}
-		return clusterconfig
+		staticConfig = clusterconfig
+		return staticConfig
 	}
+	var kubeconfig, master string
 	if home := homedir.HomeDir(); home != "" {
 		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "absolute path to kubeconfig file")
 	} else {
@@ -34,7 +40,8 @@ func getConfig() (config *rest.Config) {
 	if err != nil {
 		panic(err.Error())
 	}
-	return
+	staticConfig = config
+	return config
 }
 
 func GetK8sClient() *kubernetes.Clientset {

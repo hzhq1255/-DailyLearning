@@ -35,8 +35,7 @@ test:
 
 build:
 	@echo "Building $(app) app..."
-	@mkdir -p $(output_build_dir)
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $(output_build_dir)/$(app) -ldflags '$(GO_LDFLAGS)' $(PKG_NAME)/cmd/$(app)
+	GOOS=linux GOARCH=amd64 go build -o  bin/metrics_controller app/metrics_list_watch.go
 
 docker-build:
 	@echo "Building $(app) app in docker..."
