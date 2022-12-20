@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
@@ -96,9 +97,12 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	for i < nodeLen {
 		node := nodeList.Items[i]
 		nodePodList := podMap[node.Name]
-		resourceUsage := getNodeResourceUsages(node, *nodeMetrics, nodePodList)
-		resourceUsageJson, _ := json.Marshal(resourceUsage)
-		data[node.Name] = string(resourceUsageJson)
+		metrics := nodeMetrics
+		if metrics.Name == node.Name {
+			resourceUsage := getNodeResourceUsages(node, *nodeMetrics, nodePodList)
+			bytes, _ := json.Marshal(resourceUsage)
+			data[node.Name] = string(bytes)
+		}
 		if i%splitLen == splitLen-1 || i == nodeLen-1 {
 			cm := v1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
@@ -134,10 +138,20 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			}
 		}
 		if existedItem != nil {
-			if err := r.Client.Update(ctx, v.DeepCopy()); err != nil {
-				klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
-				return ctrl.Result{}, err
-
+			newData := existedItem.DeepCopy().Data
+			if u, ok := v.Data[nodeMetrics.Name]; ok {
+				newData[nodeMetrics.Name] = u
+			}
+			updateItem := v.DeepCopy()
+			updateItem.Data = newData
+			// if no diff update
+			if !reflect.DeepEqual(existedItem.Data, newData) {
+				if err := r.Client.Update(ctx, updateItem); err != nil {
+					klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
+					return ctrl.Result{}, err
+				} else {
+					klog.Infof("update existed usage %s \n old data is %s \n new data is %s\n", nodeMetrics.Name, existedItem.Data, newData)
+				}
 			}
 		} else {
 			tmpV := v.DeepCopy()
