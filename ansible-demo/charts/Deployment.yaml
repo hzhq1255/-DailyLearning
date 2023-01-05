@@ -1,0 +1,196 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ansible-collect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ansible-collect
+  template:
+    metadata:
+      labels:
+        app: ansible-collect
+    spec:
+      containers:
+        - name: ansible
+          image: hzhq1255/ansible:2.10.8
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          command:
+            - /bin/bash
+            - -c
+            - |-
+              tail -f /dev/null
+          volumeMounts:
+            - name: ansible-hosts
+              mountPath: "/etc/ansible"
+              readOnly: true
+            - name: ansible-playbooks
+              mountPath: "/playbooks"
+              readOnly: true
+            - name: ansible-ssh-auth
+              mountPath: "/root/.ssh"
+              # readOnly: true
+      volumes:
+        - name: ansible-hosts
+          configMap:
+            name: ansible-hosts-cm
+            items:
+              - key: hosts
+                path: hosts
+        - name: ansible-playbooks
+          configMap:
+            name: ansible-playbook-cm
+        - name: ansible-ssh-auth
+          secret:
+            secretName: ansible-ssh-auth
+            defaultMode: 256
+            items:
+              - key: ssh-privatekey
+                path: id_rsa
+              - key: known_hosts
+                path: known_hosts
+---
+# configmaps
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: ansible-hosts-cm
+data:
+  hosts: |-
+    [client]
+    node0 ansible_ssh_host=192.168.64.5 ansible_ssh_user=ubuntu
+    node1 ansible_ssh_host=192.168.64.6 ansible_ssh_user=ubuntu
+    node2 ansible_ssh_host=192.168.64.7 ansible_ssh_user=ubuntu
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: ansible-playbook-cm
+data:
+  playbook.yaml: |-
+    - hosts: client
+      any_errors_fatal: no
+      gather_facts: no
+      tasks:
+        - name: sshd status
+          shell: "systemctl status sshd | grep Active | awk -F: '{print $2}'"
+          register: sshd_status
+        - debug:
+            msg: 'The sshd status is {{ sshd_status.stdout_lines }}'
+
+---
+# secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ansible-ssh-auth
+type: kubernetes.io/ssh-auth
+data:
+  ssh-privatekey: |-
+    LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFB
+    QUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUJsd0FBQUFkemMyZ3RjbgpOaEFBQUFB
+    d0VBQVFBQUFZRUF4M0piWGFVSDMxOXRwOC9HS1BjMWhlNTltaW8vaFBkUys3YWlOdDYvYW5iOHJD
+    bERraTFYCjJzOXhTZVQ5SFZFN0t0azVMeUhZaFQxaE9kRkwvcTNab3pTOEVhNG5Pbjh5VXlob3Ja
+    cnI0WDVRNXJZTXNzNWtrQm82ZnYKd1dyZ3kwbUd1b0pBWk1LOE5aUnRzeGZ5SHBZS28xc3RkVmVh
+    TitiU3NJbjRZRFJSUXRTd3A0QmdZV2xJMkZrVjZaVGthMAp4em4zcWJBUXpnNUg3WjMxTzQ1QVJ0
+    Z0hiZENXSDI3YmVYWTN0RlZKOTdWYjk4K1IwYVZsdndteFRjUFE2OEVFaUhhbGlHCjRsZUJxL1A0
+    S2hUUUJPbEVzWnZlcFFVKzNCTGx1RFUzZzhweVpnZDVQc0dmUXd0UXc1VURNU2dPMEV3ZHVXbUZI
+    MkMrSDMKMWpDN2N5ZS91MXBOQjBvZ3ZnY0twQzRWclFieHpDeUF2WEUvVUFITnoxYWdPblRSQllu
+    QVdpVGIwQWUzSmRYcHVySWtvKwpvQW1lMHRuUDQ4OG5ORVhNd2FoMTVOL2RFRzVxcXpwd3JmM3VU
+    UG1GY2pCVWszbE9RbUZTOUpoM1RWb2RIREVvNlF3d05hCjU1YXpSczV5YUYrKzQ4d0pHR3ZuZWc5
+    VTNMVmd6cHZSK3RFV3VKWnhBQUFGaUVHMDlzVkJ0UGJGQUFBQUIzTnphQzF5YzIKRUFBQUdCQU1k
+    eVcxMmxCOTlmYmFmUHhpajNOWVh1ZlpvcVA0VDNVdnUyb2piZXYycDIvS3dwUTVJdFY5clBjVW5r
+    L1IxUgpPeXJaT1M4aDJJVTlZVG5SUy82dDJhTTB2Qkd1SnpwL01sTW9hSzJhNitGK1VPYTJETExP
+    WkpBYU9uNzhGcTRNdEpocnFDClFHVEN2RFdVYmJNWDhoNldDcU5iTFhWWG1qZm0wckNKK0dBMFVV
+    TFVzS2VBWUdGcFNOaFpGZW1VNUd0TWM1OTZtd0VNNE8KUisyZDlUdU9RRWJZQjIzUWxoOXUyM2wy
+    TjdSVlNmZTFXL2ZQa2RHbFpiOEpzVTNEME92QkJJaDJwWWh1SlhnYXZ6K0NvVQowQVRwUkxHYjNx
+    VUZQdHdTNWJnMU40UEtjbVlIZVQ3Qm4wTUxVTU9WQXpFb0R0Qk1IYmxwaFI5Z3ZoOTlZd3UzTW52
+    N3RhClRRZEtJTDRIQ3FRdUZhMEc4Y3dzZ0wxeFAxQUJ6YzlXb0RwMDBRV0p3Rm9rMjlBSHR5WFY2
+    YnF5SktQcUFKbnRMWnorUFAKSnpSRnpNR29kZVRmM1JCdWFxczZjSzM5N2t6NWhYSXdWSk41VGtK
+    aFV2U1lkMDFhSFJ3eEtPa01NRFd1ZVdzMGJPY21oZgp2dVBNQ1JocjUzb1BWTnkxWU02YjBmclJG
+    cmlXY1FBQUFBTUJBQUVBQUFHQUNqWjhBUGd5eG1DRXRSRjl2a3FGV0R1NWZRCmZSaTVtZUMxTmpi
+    RStjNmVMWXBxaXd3L2NVTHZsTkhlbHV3QjN4RzQwMndVZjRoajhadjh3TXVnaDFNdWNnQThCQkZE
+    emYKNnZQd1kwWmg4b0NsUENFaGxwVGN2NmZHSzhzMURwbktOQjFjSldjWXBxdUl3bWoyT0lJNEtQ
+    bmlTTXQvdmh3dC9NRlZ2bApSdWphNmVNSi9qUER5NjBvWEtLNExXY3hTS0RJTVdnRjhLaDBDaU5J
+    UFFnMG1TRjBhWDM4ck02eVJpTXU2bnBORnl1WTlVCis2UXFmWHVja1lzWnBBZWxSck15RlBVaHJa
+    dE55Z0J1Y2NTanM3QytnVTdlWkJWTDNYLzZBYXRtRVY5OUJpY2x3MGRvWmYKak5nZHFSRjZUV3Jm
+    ZDdoUUh6VzY2aHVqd3B2UytnelhCWkk1aWFRNmtkV2o1dzRQcDMrTHJsQUtYV05Nb1l4NzZFSERN
+    Uwo1OVpGMS9VSzRra1c1SnhlcU5JNG1lcXFwcVlReGNsT1VVL29ma3RFb01RcDFwWVRWREtBY3Nl
+    VFNvWW9UaVgvSXhZU0VpCkRxOFhMUWp1dHY5dVZsZ2VjVG03cnZNZlZQODcvbTNFUU8waGxyN1do
+    Rm0vbGlmbytCREVzZkZPVTBkQWEwT3dEQkFBQUEKd1FEQVd1WGVsSXZNTHArdjllUDBvVis2amJH
+    RlQweSs1aVJCQmpHVnA3eEhCTG9VN2RTTnRFRFY2YWFRaVVuZGFqcHpLQwp0a0pob0F5MnNaYXM4
+    cnRPUjAzYnFON3h6cTZJNzV5VUZJMm51a2xZZ0JrbitNdVpJTlUwbjlhczhyL3JpSDB3WHMxY2d5
+    CkRiVWpqV281cUJCbUVMSFJMMUE3aEpDbFpFTzVES1NGS3pPVkVvSkFEV0Yvc2ZpQmRTWnVDVE5o
+    OHdWUmZ1bytJazRXMUsKN1ZObk5JdllnUlpVT3ROeEFRTkFlUUJZWE1EY05qWC9wRm00Lzh4L3lj
+    aitvZlVLa0FBQURCQU4za3hjZ3M4czZFenprdQpWeEFzUXlza1dXVUEyUkNnRlY5UXZSMGNEWDFo
+    T2RFeHdQdmxLekhua0dHMUlaVW5Qbm45NEZGOW5Rdjh6K1MzRkJVcGpkCmJwOUVrQU84MEJXL1ZW
+    TkwxcVFLNmdJWHNYK2F2UGdmL0wwL2F3SDRsRWJzRGdjVnpkU2pZYmtpSy96VnNCRXlXRzJVT3AK
+    K0RjcVVFSTRkTTJCTmZuejBoSW5LcEN1bjBoWFB3eEE5T0ZhMGtCVFdVSUt4bjN1Um56SG1yZ3RG
+    aXJOMUE2ZkdCZk02YgpvWDh4c0ZNSnNOMmRUSVhrY0xpVENpeS9CZ01nVkJJUUFBQU1FQTVocFRr
+    ZjFleFA0MmEzVGdDTk5obVNtc1VSM2dneXpCCkNJQTBnZ3g1cE5LSkpkdzg5VUFhT0pSUXV5aHpH
+    SHRVOFR6NDk2MEtKRGxwOE1lYmhOa2t1bURhUVBHcFFvd3I0L1pNcm8KT0hhZE5kbVpOWStQUkNk
+    L0hHQWJZMFlZaEhtK3VQVHZWWmEvYzVDbkF2ZjJYN2VVSEF1dXJnc3JpaFFiS2pyUWtSakZ2ZApk
+    Q3k0QVFpSXNRQWtCR1pFUDJBVkVoQjRlWXdZY1Y1VG5zaGhmRXVjTDlVdnpYZ1BiWWJ0M29WdWU1
+    Y3lCMHlSVEJBaW9DCk84R0tkbXp3TmdvSnRSQUFBQUVIVmlkVzUwZFVCaGJuTnBZbXhsTFRBQkFn
+    PT0KLS0tLS1FTkQgT1BFTlNTSCBQUklWQVRFIEtFWS0tLS0tCg==
+  known_hosts: |-
+    fDF8SUVxeWJHbEJXV1dRVHM3WFFUbnNvdzNTM0pnPXx5MUVacU5RNmRRUElvUXZ4YzlBU2ZiQUF0
+    ZkU9IHNzaC1lZDI1NTE5IEFBQUFDM056YUMxbFpESTFOVEU1QUFBQUlMVGo0NXZaQWN2MzJTb05U
+    TlI1TXFZVVNuYlB6YlAwdVpEQmY2bEd1b2NRCnwxfGp5OUdxZWUwL1I4VnAxdms2QndWOGJGQ05S
+    UT18a2RRVlBHVmdPVUh4Rk16SWR3VkVzUjl5YzhFPSBzc2gtZWQyNTUxOSBBQUFBQzNOemFDMWxa
+    REkxTlRFNUFBQUFJRGdZbk9Qam1tRFJZNE1EbEhtc3N0c3BBWitaMzNVSmRBNjZwTmgrRFV4aQp8
+    MXxzR3pvb1Z0em9BWHJYSHZkc3Vsb2w0RUlkUGM9fDVjdjhoc29hRGMxQkQvWlVldkxsd3h6UXJ4
+    bz0gc3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCZ1FDalBIVFZxQXJuNmxLd2Zp
+    Z0c0SlJhRGwrdW1jSzd6UWFLZGVrMkFCb1ZERHl4elNCVlJLR1NOTGNxUlYxTENOZXRWcFNMNXNi
+    cnpaSkdPUm9QMWhKSS9LcEhtSjkyekkrWUluTk4wTE44SFJBOFFaT2ZMcW1qeTNBaitMbWk4WGVa
+    Vjc3TGh4QzQ4a3l6ekxCcVZMT1RXM0o4ZDF2dWpMN01IdllKN1dFM3UyZXRWSy9VQ2wrOUlXS0RR
+    b2pSRG9rV1VFRHg2NWkrVXBTZ1VkUnJudU1BSlRtK2FSYjlYUEw5RE5zVllQQmkzWEFRdElZTlY1
+    bHhaRXBidjIxU2FTN3VSbWk2VEdWMmdRQUNMaDQzS0FyZk56TTUrZ2NaaFZmbjJSRThKNzhaQ3lS
+    dVZyMDFKRU5JUFdEbzQ1Ymo5ZHZjNDJsU09FKzlUYlFId3ZWODNVb0g2NGdJZ2lLN3BkTmZiVVhK
+    eFpJVDk1aUFZM05jcUsydW5lNXpMN2RMODdpZ2RCL0RWbENSemE4MUpadGVwVUd0SkhSRm9zOURW
+    Z3FsNm9QOGVocS9OUW41OTlxbXRMU2hWUm5zNTlxT0IybWt2SGZGMmFSN01ROTlWeWhxTzNjQ204
+    bEhDcFRmL0gybHdkWWNPazAvNk5CeGtpSldYS25mNmdjTnhyOGZLQU09CnwxfDlNRldHVHZhZGJZ
+    RmJRaGt6US9ucGl6L3FoWT18QjBtSkRXN3JTNHIzMVlGVjVFU0FzVnhqVU5vPSBlY2RzYS1zaGEy
+    LW5pc3RwMjU2IEFBQUFFMlZqWkhOaExYTm9ZVEl0Ym1semRIQXlOVFlBQUFBSWJtbHpkSEF5TlRZ
+    QUFBQkJCSnRoUGRDcm0wZmNkM0ZLeDQ3L2xmYVlGbmN1dzZqQjBjRU9vamNRN2J2NnZzYXl3VUJp
+    bnhTVDJMSkZ2MityYzVpQnJTL09CZkkwekt2UkNOOE0vdmc9CnwxfFY0WXUyWjFMS3lEUDc2TFNE
+    TXFJbXRyaUxYbz18eU1tNlRwQUR2NEtacG9OQ0UwcGtjazhiT1NBPSBzc2gtZWQyNTUxOSBBQUFB
+    QzNOemFDMWxaREkxTlRFNUFBQUFJRGdZbk9Qam1tRFJZNE1EbEhtc3N0c3BBWitaMzNVSmRBNjZw
+    TmgrRFV4aQp8MXxPN0RtT0pmL0xKakUrSXVjTzlqUTZPQVk4Yjg9fERwSFFZaXZQSnp6QTdjL0RT
+    MGI0K0JyMmx4bz0gc3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSU1uQ2laYmx4
+    c01QNzl2RlpWMkI0bVVJdGFvOTR6ZHJBanJxUjE0azdnMWMKfDF8NGhZNnF6akU3UzIrK09SaG5u
+    ZkRwYUpRVEFrPXxhazcwWk5DYytwaE4yVjh1Y0dvb3h3RXNXeWM9IHNzaC1yc2EgQUFBQUIzTnph
+    QzF5YzJFQUFBQURBUUFCQUFBQmdRQ2NHOEVXVFBHd3BaQ0trd0IrT1ZBSU9yUTdReVZkaDdGZnNQ
+    aWpxRFZGbFFCa3U5bTAxSlQvbGxoUWF0SE5Bd0N0bVlGVWtjMG1md2Z2bC8xb2JVelcyMFBjYnhI
+    d3lxdUVvbnUzTkhvQ3M4RVRqWU10YnB5enJZSGJVbVNHMUNxOGtZLzVUTE0rOVRERGxIeGphTWE1
+    eFNnUGY1T256V1hhbDdLTG1DWkUxMVp5bFRpWmtDaFdnNXh3ejV0TjByZ0dLQU1kWVZvSDZETHRK
+    Und5S01wM3pld2pHNWZxQ21QdWNvODRmaGkzSmsvc3JqcW9yZis2VytvUGNuZXUwcnhicUhidXcr
+    VjZoVERBeEZUNnY5WWo4cTRSVTB2MEgwV0RUMmFTQWdCV1pUbjY2bGdMcE1JaDNGNnNXdUl1cndW
+    YzlLN1VJWm1yMDFHR1M5SkxMTnY2VG5jZEduSjljWWtFU1ByZnI4bDFaVGpsYUk4TWE5WG1tcVNN
+    RGZjVGdoQzNicFVqcjd3WjNOM0c5UE5kZ2t5SXhpalpGb0Vmd3p6Zk9RZnpRWDBiZjFGRWZoUmsw
+    YU9iYUpvY3lXVCs5WmlLc3E1andJd1piQ1B6ZThDWkt4eitOS09ZZDF0MUN4dkx5U0J0WFc2R2Vm
+    Mm95ajBNRWNEU2tDZTVnQ3R5aVRVPQp8MXxPUVlWdm4rUUc0QjJ5aXZNR2R2WGhkMXZNN2M9fFlS
+    Q25vMVBsQjIvRDBTM25QWW5sRmhKMFFzYz0gZWNkc2Etc2hhMi1uaXN0cDI1NiBBQUFBRTJWalpI
+    TmhMWE5vWVRJdGJtbHpkSEF5TlRZQUFBQUlibWx6ZEhBeU5UWUFBQUJCQk1wTWFpUVhjMHFqZmhB
+    c2Nvd0lQc2xYZ3ZPL1FSaDJFUXJyOG9vVVRjbmZpblllTFRITUZicGxRZkNDbm5IOEdNeWwvZ1dP
+    OFllOW1HSUNEdllDWXowPQp8MXxaVFBkcm9qMEV2N2JJKzhOQjV3eENpR2VRUEE9fENsOFYzV3ow
+    cldIN2UwZ3V3YlI4MHZLNktlRT0gc3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFC
+    Z1FDV1l4WmNlQ0ppNWJHcTNJdGQzYzJMVGNnVERRdkoxVG14N0lRV2crR2lXQ3lEM0FlR0tqTGVY
+    alpXL3VmQzVjTTJqYVRDSWo0cVEzeHhYc091WTdCUVFUL2hnY3prc2ltd3MwbklyakpleENaYXdU
+    djJVeENhQ3JheUZWbVcvNmRQc09pN3FRK2xidkdaQkwybGo0Vmt0ejVhVkVzSU0zdElWMkRJTk5J
+    WXVCVUtCWXpSb25rUW8yQkl5QUl4SmZ4V3RvMFJqTVkzQW5ySituQ1lmeEZ4SC9KbjdLZ3lvTndO
+    aTFEL2JQeDJMZTJhK2c1N3h5MGR1U0VZb3JIcjJXZUZTMjBNMXJzcWNCOXRONEo5OVM1VHhBVmhH
+    SkpvOWRjVWFDTGsxMkxod1FwdWZuNW9HNGhoSzhiVmdWKzZxdXY1Q2VLUFY4NitGQnZ5UEI5OTZh
+    bURpNEN2N2h1VDNuYTFXRTZJejk0bEhpdTVXeXhvVFFydDZXWUs1WDVMTS9DbzI1NU9UR1Q4NSt6
+    c3FNcmR5TVZqV3FRVUFPemxMNzZ0S2pieVhNelE0SmpuMTI3cXArY0ZHOExvcWRyelUzTmlGVVQ2
+    KzFQT0xoL2NRYTREelo1NUVjWjFRY3U0N2orZndJRER1MHBOZEtXdGY2b2lENW13a2w2K1N2R3Ez
+    ejg9CnwxfGJGdVFkbHpGejYyWTB6RFkxUnoxOUY0Y1A3OD18Uk90cEE3M0F5MFZBMXAxQXIrVi9F
+    WFgwVFJFPSBlY2RzYS1zaGEyLW5pc3RwMjU2IEFBQUFFMlZqWkhOaExYTm9ZVEl0Ym1semRIQXlO
+    VFlBQUFBSWJtbHpkSEF5TlRZQUFBQkJCQkxsRDlKcUdPazFLR09vOEZYWGkyRkNPZUV2Y3p0RWhB
+    RFZVVDJ1elZ2dnc0OFczRWJUTG1LQjVNK3Nna1ZWQkFkZXFGWWd1WERIY2pCQWVyUG0rQzA9Cg==
