@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +40,7 @@ public class AnsiblePlaybookResult {
 
     @NoArgsConstructor
     @Data
-    public static class NodeStatsDTO extends HashMap<String, Object> {
+    public static class NodeStatsDTO {
         @JsonProperty("changed")
         private Integer changed;
         @JsonProperty("failures")
@@ -96,9 +94,9 @@ public class AnsiblePlaybookResult {
             private TaskDTO task;
             @NoArgsConstructor
             @Data
-            public static class NodeHostDTO extends HashMap<String, Object> {
+            public static class NodeHostDTO {
                 @JsonProperty("_ansible_no_log")
-                private Object ansibleNoLog;
+                private Boolean ansibleNoLog;
                 @JsonProperty("action")
                 private String action;
                 @JsonProperty("ansible_facts")
@@ -129,6 +127,8 @@ public class AnsiblePlaybookResult {
                 private List<String> stdoutLines;
                 @JsonProperty("_ansible_verbose_always")
                 private Boolean ansibleVerboseAlways;
+                @JsonProperty("failed")
+                private Boolean failed;
 
                 @NoArgsConstructor
                 @Data
