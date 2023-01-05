@@ -1,0 +1,28 @@
+---
+# ansible-hosts-cm.yaml
+# ansible hosts /etc/ansible/hosts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ansible-hosts
+  namespace: {{ .Release.Namespace }}
+data:
+  hosts: {{ .Values.ansibleHosts }}
+---
+# ansible cfg
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ansible-cfg
+  namespace: {{ .Release.Namespace }}
+data:
+  ansible.cfg: {{ .Values.ansibleCfg }}
+---
+# ansible playbooks
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ansible-playbooks
+  namespace: {{ .Release.Namespace }}
+data:
+  palybook.yaml: {{ .Values.ansiblePlaybooks.playbook }}

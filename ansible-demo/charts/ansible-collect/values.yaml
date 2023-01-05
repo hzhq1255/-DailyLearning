@@ -1,0 +1,99 @@
+# Default values for ansible-collect.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+
+image:
+  repository: hzhq1255/ansible-collect
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 2.10.8
+  controllerRepository: hzhq1255/ansible-controller
+  controllerTag: 0.1
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+ansibleHosts: |-
+  [client]
+  node0 ansible_ssh_host=192.168.64.5 ansible_ssh_user=ubuntu ansible_ssh_pass=123456
+  node1 ansible_ssh_host=192.168.64.6 ansible_ssh_user=ubuntu ansible_ssh_pass=123456
+  node2 ansible_ssh_host=192.168.64.7 ansible_ssh_user=ubuntu ansible_ssh_pass=123456
+
+ansibleCfg: |-
+  # generate cfg ansible-config init --disabled > ansible.cfg
+  [defaults]
+  # stdout is json
+  ;stdout_callback=default
+  stdout_callback=json
+  # (boolean) Set this to "False" if you want to avoid host key checking by the underlying tools Ansible uses to connect to the host
+  host_key_checking=False
+
+ansiblePlaybooks:
+  playbook: |-
+    - hosts: client
+      any_errors_fatal: no
+      gather_facts: no
+      tasks:
+      - name: sshd status
+        shell: "systemctl status sshd | grep Active | awk -F: '{print $2}'"
+        register: sshd_status
+      - debug:
+          msg: 'The sshd status is {{ sshd_status.stdout_lines }}'
+ssh:
+  privateKey: ""
+  knownHosts: ""
+
+
+
