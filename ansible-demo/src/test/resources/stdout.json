@@ -1,0 +1,182 @@
+{
+    "custom_stats": {},
+    "global_custom_stats": {},
+    "plays": [
+        {
+            "play": {
+                "duration": {
+                    "end": "2023-01-05T11:59:19.646733Z",
+                    "start": "2023-01-05T11:59:15.153864Z"
+                },
+                "id": "4ed5aef5-11f1-b351-4319-00000000000f",
+                "name": "client"
+            },
+            "tasks": [
+                {
+                    "hosts": {
+                        "10.10.101.168-share": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.15-master": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.16-master": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.17-master": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.18-slave": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.19-slave": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.20-slave": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.21-slave": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.22-harbor": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        },
+                        "10.10.103.23-harbor": {
+                            "_ansible_no_log": false,
+                            "action": "shell",
+                            "failed": true,
+                            "msg": "to use the 'ssh' connection type with passwords, you must install the sshpass program"
+                        }
+                    },
+                    "task": {
+                        "duration": {
+                            "end": "2023-01-05T11:59:19.646733Z",
+                            "start": "2023-01-05T11:59:15.453087Z"
+                        },
+                        "id": "4ed5aef5-11f1-b351-4319-000000000011",
+                        "name": "sshd status"
+                    }
+                }
+            ]
+        }
+    ],
+    "stats": {
+        "10.10.101.168-share": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.15-master": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.16-master": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.17-master": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.18-slave": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.19-slave": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.20-slave": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.21-slave": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.22-harbor": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        },
+        "10.10.103.23-harbor": {
+            "changed": 0,
+            "failures": 1,
+            "ignored": 0,
+            "ok": 0,
+            "rescued": 0,
+            "skipped": 0,
+            "unreachable": 0
+        }
+    }
+}

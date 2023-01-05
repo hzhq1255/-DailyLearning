@@ -1,0 +1,9 @@
+- hosts: client
+  any_errors_fatal: no
+  gather_facts: no
+  tasks:
+    - name: sshd status
+      shell: "systemctl status sshd | grep Active | awk -F: '{print $2}'"
+      register: sshd_status
+    - debug:
+        msg: 'The sshd status is {{ sshd_status.stdout_lines }}'

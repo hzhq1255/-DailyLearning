@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: ansible-collect
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{.Values.image.repository}}:{{.Values.image.tag}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash
@@ -29,11 +29,6 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            {{- with .Values.ansibleHosts}}
-            - name: ansible-hosts
-              mountPath: "/etc/ansible"
-              readOnly: true
-            {{ end }}
             {{- with .Values.ansibleCfg }}
             - name: ansible-cfg
               mountPath: "/etc/ansible"
@@ -41,25 +36,27 @@ spec:
             {{- with .Values.ansiblePlaybooks }}
             - name: ansible-playbooks
               mountPath: "/playbooks"
-              readOnly: true
             {{ end }}
             {{- with .Values.ssh }}
+            {{- with printf "%s%s" .privateKey .knownHosts}}
             - name: ansible-ssh-auth
               mountPath: "/root/.ssh"
             {{ end }}
+            {{ end}}
       volumes:
-        {{- with .Values.ansibleHosts}}
-        - name: ansible-hosts
-          configMap:
-            name: ansible-hosts
-            items:
-              - key: hosts
-                path: hosts
-        {{ end }}
-        {{- with .Values.ansibleCfg }}
+        {{- if printf "%s%s" .Values.ansibleCfg .Values.ansibleHosts}}
         - name: ansible-cfg
           configMap:
             name: ansible-cfg
+            items:
+              {{- with  .Values.ansibleHosts}}
+              - key: hosts
+                path: hosts
+              {{ end }}
+              {{- with .Values.ansibleCfg}}
+              - key: ansible.cfg
+                path: ansible.cfg
+              {{ end }}
         {{ end }}
         {{- with .Values.ansiblePlaybooks }}
         - name: ansible-playbooks
@@ -67,6 +64,7 @@ spec:
             name: ansible-playbooks
         {{ end }}
         {{- with .Values.ssh }}
+        {{- with printf "%s%s" .privateKey .knownHosts}}
         - name: ansible-ssh-auth
           secret:
             secretName: ansible-ssh-auth
@@ -80,7 +78,8 @@ spec:
               - key: known_hosts
                 path: known_hosts
               {{ end }}
-          {{ end }}
+      {{ end }}
+      {{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -115,7 +114,7 @@ spec:
     spec:
       containers:
         - name: ansible-controller
-          image: {{ .Values.image.controllerRepository }}: {{ .Values.image.controllerTag | default "latest" }}
+          image: {{ .Values.image.controllerRepository }}:{{.Values.image.controllerTag}}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

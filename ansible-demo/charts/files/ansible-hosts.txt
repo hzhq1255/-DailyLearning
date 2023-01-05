@@ -1,0 +1,11 @@
+[client]
+10.10.101.168-share	ansible_ssh_host=10.10.101.168	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.15-master	ansible_ssh_host=10.10.103.15	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.16-master	ansible_ssh_host=10.10.103.16	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.17-master	ansible_ssh_host=10.10.103.17	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.18-slave	ansible_ssh_host=10.10.103.18	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.19-slave	ansible_ssh_host=10.10.103.19	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.20-slave	ansible_ssh_host=10.10.103.20	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.21-slave	ansible_ssh_host=10.10.103.21	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.22-harbor	ansible_ssh_host=10.10.103.22	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
+10.10.103.23-harbor	ansible_ssh_host=10.10.103.23	ansible_ssh_user=root	ansible_ssh_pass=Ab123456
