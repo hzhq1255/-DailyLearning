@@ -21,11 +21,11 @@ import (
 	"encoding/json"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
+	resourcehelper "k8s.io/kubectl/pkg/util/resource"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,8 +39,9 @@ import (
 const (
 	UsageAnnotation  = "usage"
 	DefaultNamespace = "default"
-	UsageLabel       = "node-usage"
-	KeyNodePrefix    = "node-"
+	//UsageLabel       = "node-usage"
+	UsageLabel    = "node.cnstack.alibabacloud.com/usage-info"
+	KeyNodePrefix = "node-"
 )
 
 // NodeMetricsReconciler reconciles a NodeMetrics object
@@ -84,6 +85,140 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		klog.Error(err, "list pods failed")
 		return ctrl.Result{}, err
 	}
+
+	configmapList := &v1.ConfigMapList{}
+	if err := r.Client.List(ctx, configmapList, &ctrlclient.ListOptions{
+		Namespace:     DefaultNamespace,
+		LabelSelector: labels.SelectorFromSet(map[string]string{UsageLabel: ""})}); err != nil {
+		klog.Error(err, "list old cm failed")
+		return ctrl.Result{}, err
+	}
+	// createNodeUsages
+	newNodeUsages := r.createNodeUsageInfo(*nodeList, *nodeMetrics, *podList)
+
+	// compare newUsage and OldUsage get create,update,del
+	createUsages, updateUsages, deleteUsages := r.getUpdateNodeUsageInfo(newNodeUsages, configmapList.Items)
+
+	if len(createUsages) != 0 {
+		for _, v := range createUsages {
+			if err := r.Client.Create(ctx, v.DeepCopy()); err != nil {
+				klog.Error("create %s node's usage info cm %s failed %v", nodeMetrics.Name, v.Name, err.Error())
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	if len(updateUsages) != 0 {
+		for _, v := range updateUsages {
+			if err := r.Client.Update(ctx, v.DeepCopy()); err != nil {
+				klog.Error("update %s node's usage info cm %s failed %v", nodeMetrics.Name, v.Name, err.Error())
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	if len(deleteUsages) != 0 {
+		for _, v := range deleteUsages {
+			if err := r.Client.Delete(ctx, v.DeepCopy()); err != nil {
+				klog.Error("delete no need node usage info cm %s failed %v", v.Name, err.Error())
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	//podMap := map[string][]v1.Pod{}
+	//for _, pod := range podList.Items {
+	//	if pod.Spec.NodeName != "" && pod.Status.Phase != v1.PodSucceeded && pod.Status.Phase != v1.PodFailed {
+	//		l := podMap[pod.Spec.NodeName]
+	//		podMap[pod.Spec.NodeName] = append(l, pod)
+	//	}
+	//}
+	//nodeLen := len(nodeList.Items)
+	//usageConfigMapList := make([]v1.ConfigMap, 0)
+	//i, k, splitLen, data := 0, 0, 2000, make(map[string]string)
+	//for i < nodeLen {
+	//	node := nodeList.Items[i]
+	//	nodePodList := podMap[node.Name]
+	//	metrics := nodeMetrics
+	//	if metrics.Name == node.Name {
+	//		resourceUsage := getNodeResourceUsages(node, *nodeMetrics, nodePodList)
+	//		bytes, _ := json.Marshal(resourceUsage)
+	//		data[node.Name] = string(bytes)
+	//	}
+	//	if i%splitLen == splitLen-1 || i == nodeLen-1 {
+	//		cm := v1.ConfigMap{
+	//			ObjectMeta: metav1.ObjectMeta{
+	//				Labels: map[string]string{
+	//					UsageLabel: "",
+	//				},
+	//				Name:      "resource-usage-" + fmt.Sprintf("%d", k),
+	//				Namespace: DefaultNamespace,
+	//			},
+	//			Data: data,
+	//		}
+	//		usageConfigMapList = append(usageConfigMapList, cm)
+	//		data = make(map[string]string)
+	//		k++
+	//	}
+	//
+	//	i++
+	//}
+	//oldUsageConfigMaps := &v1.ConfigMapList{}
+	//if err := r.Client.List(ctx, oldUsageConfigMaps, &ctrlclient.ListOptions{
+	//	LabelSelector: labels.SelectorFromSet(map[string]string{UsageLabel: ""})}); err != nil {
+	//	klog.Error(err, "list old cm failed")
+	//	return ctrl.Result{}, err
+	//}
+	//existedMap := map[string]bool{}
+	//for _, v := range usageConfigMapList {
+	//	var existedItem *v1.ConfigMap
+	//	for _, item := range oldUsageConfigMaps.Items {
+	//		if v.Name == item.Name {
+	//			existedItem = item.DeepCopy()
+	//			existedMap[v.Name] = true
+	//			break
+	//		}
+	//	}
+	//	if existedItem != nil {
+	//		newData := existedItem.DeepCopy().Data
+	//		if u, ok := v.Data[nodeMetrics.Name]; ok {
+	//			newData[nodeMetrics.Name] = u
+	//		}
+	//		updateItem := v.DeepCopy()
+	//		updateItem.Data = newData
+	//		// if no diff update
+	//		if !reflect.DeepEqual(existedItem.Data, newData) {
+	//			if err := r.Client.Update(ctx, updateItem); err != nil {
+	//				klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
+	//				return ctrl.Result{}, err
+	//			} else {
+	//				klog.Infof("update existed usage %s \n old data is %s \n new data is %s\n", nodeMetrics.Name, existedItem.Data, newData)
+	//			}
+	//		}
+	//	} else {
+	//		tmpV := v.DeepCopy()
+	//		if err := r.Client.Create(ctx, tmpV); err != nil {
+	//			klog.Errorf("create %s node usage cm failed %v", tmpV.Name, err.Error())
+	//			return ctrl.Result{}, err
+	//		}
+	//	}
+	//}
+	//// sync map
+	//for _, item := range oldUsageConfigMaps.Items {
+	//	if _, ok := existedMap[item.Name]; !ok {
+	//		delItem := &item
+	//		if err := r.Client.Delete(ctx, delItem); err != nil && !errors.IsNotFound(err) {
+	//			klog.Errorf("delete no need %s node usage cm failed , error is %v", item.Name, err.Error())
+	//			return ctrl.Result{}, err
+	//		}
+	//	}
+	//}
+	return ctrl.Result{}, nil
+}
+
+// createNodeUsageInfo
+// put node metrics usage,allocatable,requests,limits to the configmaps with the constants.NodeUsageLabelKey
+func (r *NodeMetricsReconciler) createNodeUsageInfo(nodeList v1.NodeList, nodeMetrics metricsv1beta1.NodeMetrics, podList v1.PodList) []v1.ConfigMap {
 	podMap := map[string][]v1.Pod{}
 	for _, pod := range podList.Items {
 		if pod.Spec.NodeName != "" && pod.Status.Phase != v1.PodSucceeded && pod.Status.Phase != v1.PodFailed {
@@ -91,15 +226,14 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			podMap[pod.Spec.NodeName] = append(l, pod)
 		}
 	}
-	nodeLen := len(nodeList.Items)
-	usageConfigMapList := make([]v1.ConfigMap, 0)
+	// init node usages per 2000 split
+	nodeUsages, nodeLen := make([]v1.ConfigMap, 0), len(nodeList.Items)
 	i, k, splitLen, data := 0, 0, 2000, make(map[string]string)
 	for i < nodeLen {
 		node := nodeList.Items[i]
 		nodePodList := podMap[node.Name]
-		metrics := nodeMetrics
-		if metrics.Name == node.Name {
-			resourceUsage := getNodeResourceUsages(node, *nodeMetrics, nodePodList)
+		if nodeMetrics.Name == node.Name {
+			resourceUsage := getNodeResourceUsages(node, nodeMetrics, nodePodList)
 			bytes, _ := json.Marshal(resourceUsage)
 			data[node.Name] = string(bytes)
 		}
@@ -114,64 +248,57 @@ func (r *NodeMetricsReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				},
 				Data: data,
 			}
-			usageConfigMapList = append(usageConfigMapList, cm)
+			nodeUsages = append(nodeUsages, cm)
 			data = make(map[string]string)
 			k++
 		}
-
 		i++
 	}
-	oldUsageConfigMaps := &v1.ConfigMapList{}
-	if err := r.Client.List(ctx, oldUsageConfigMaps, &ctrlclient.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{UsageLabel: ""})}); err != nil {
-		klog.Error(err, "list old cm failed")
-		return ctrl.Result{}, err
-	}
-	existedMap := map[string]bool{}
-	for _, v := range usageConfigMapList {
-		var existedItem *v1.ConfigMap
-		for _, item := range oldUsageConfigMaps.Items {
-			if v.Name == item.Name {
-				existedItem = item.DeepCopy()
-				existedMap[v.Name] = true
+	return nodeUsages
+}
+
+// getUpdateNodeUsageInfo
+// compare diff between newNodeUsages and oldNodeUsages then get updateNodeUsages
+// return createUsages updateUsages deleteUsages []v1.ConfigMaps
+func (r *NodeMetricsReconciler) getUpdateNodeUsageInfo(newNodeUsages []v1.ConfigMap, oldNodeUsages []v1.ConfigMap) (createUsages []v1.ConfigMap, updateUsages []v1.ConfigMap, deleteUsages []v1.ConfigMap) {
+	createUsages, updateUsages, deleteUsages = make([]v1.ConfigMap, 0), make([]v1.ConfigMap, 0), make([]v1.ConfigMap, 0)
+	for _, n := range newNodeUsages {
+		var oldUsage *v1.ConfigMap
+		for _, o := range oldNodeUsages {
+			if n.Name == o.Name {
+				oldUsage = &o
 				break
 			}
 		}
-		if existedItem != nil {
-			newData := existedItem.DeepCopy().Data
-			if u, ok := v.Data[nodeMetrics.Name]; ok {
-				newData[nodeMetrics.Name] = u
-			}
-			updateItem := v.DeepCopy()
-			updateItem.Data = newData
-			// if no diff update
-			if !reflect.DeepEqual(existedItem.Data, newData) {
-				if err := r.Client.Update(ctx, updateItem); err != nil {
-					klog.Errorf("update %s node usage cm failed %v", existedItem.Name, err.Error())
-					return ctrl.Result{}, err
-				} else {
-					klog.Infof("update existed usage %s \n old data is %s \n new data is %s\n", nodeMetrics.Name, existedItem.Data, newData)
-				}
-			}
+		if oldUsage == nil {
+			newUsage := n
+			createUsages = append(createUsages, newUsage)
 		} else {
-			tmpV := v.DeepCopy()
-			if err := r.Client.Create(ctx, tmpV); err != nil {
-				klog.Errorf("create %s node usage cm failed %v", tmpV.Name, err.Error())
-				return ctrl.Result{}, err
+			oldData, newData := oldUsage.DeepCopy().Data, oldUsage.DeepCopy().Data
+			for k, v := range n.Data {
+				newData[k] = v
+			}
+			if !reflect.DeepEqual(oldData, newData) {
+				klog.Infof("old data %v\n new data %v\n", oldData, newData)
+				newUsage := oldUsage.DeepCopy()
+				newUsage.Data = newData
+				updateUsages = append(updateUsages, *newUsage)
 			}
 		}
 	}
-	// sync map
-	for _, item := range oldUsageConfigMaps.Items {
-		if _, ok := existedMap[item.Name]; !ok {
-			delItem := &item
-			if err := r.Client.Delete(ctx, delItem); err != nil && !errors.IsNotFound(err) {
-				klog.Errorf("delete no need %s node usage cm failed , error is %v", item.Name, err.Error())
-				return ctrl.Result{}, err
+	for _, o := range oldNodeUsages {
+		isNotNeed := true
+		for _, n := range oldNodeUsages {
+			if n.Name == o.Name {
+				isNotNeed = false
+				break
 			}
 		}
+		if isNotNeed {
+			deleteUsages = append(deleteUsages, o)
+		}
 	}
-	return ctrl.Result{}, nil
+	return
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -218,7 +345,7 @@ func getNodeResourceUsages(node v1.Node, nodeMetrics metricsv1beta1.NodeMetrics,
 			Usage:       int64(len(podList)),
 		}
 	}()
-	resourceUsages.PodNum = func() ResourceUsage {
+	resourceUsages.EphemeralStorage = func() ResourceUsage {
 		req, limit, alloc := reqs[v1.ResourceEphemeralStorage], limits[v1.ResourceEphemeralStorage], allocatable[v1.ResourceEphemeralStorage]
 		return ResourceUsage{
 			Reqs:        req.Value(),
@@ -305,7 +432,7 @@ func maxResourceList(list, new v1.ResourceList) {
 func GetPodsTotalRequestsAndLimits(podList *v1.PodList) (reqs map[v1.ResourceName]resource.Quantity, limits map[v1.ResourceName]resource.Quantity) {
 	reqs, limits = map[v1.ResourceName]resource.Quantity{}, map[v1.ResourceName]resource.Quantity{}
 	for _, pod := range podList.Items {
-		podReqs, podLimits := PodRequestsAndLimits(&pod)
+		podReqs, podLimits := resourcehelper.PodRequestsAndLimits(&pod)
 		for podReqName, podReqValue := range podReqs {
 			if value, ok := reqs[podReqName]; !ok {
 				reqs[podReqName] = podReqValue.DeepCopy()
