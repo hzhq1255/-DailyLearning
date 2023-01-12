@@ -1,0 +1,27 @@
+FROM debian:11 as builder
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-updates main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-backports main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian-security bullseye-security main contrib non-free\n" > /etc/apt/sources.list
+WORKDIR /workspace
+RUN apt-get update && apt-get install -y wget
+RUN echo $(arch | awk '{ if ($0 ~ /aarch64/) {print "arm64"} else if ($0 ~ /x86_64/) {print "amd64"} else {print "amd64"}}') > arch.txt
+ENV ETCD_VERSION=v3.4.23
+ENV CALICO_VERSION=v3.20.6
+RUN echo $ETCD_VERSION
+RUN echo $CALICO_VERSION
+#https://github.com/etcd-io/etcd/releases/download/v3.4.23/etcd-v3.4.23-linux-arm64.tar.gz
+# download 3.4.23 etcdctl
+RUN wget https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$(cat arch.txt).tar.gz
+RUN tar -zxvf etcd-${ETCD_VERSION}-linux-$(cat arch.txt).tar.gz
+RUN cp etcd-${ETCD_VERSION}-linux-$(cat arch.txt)/etcdctl ./etcdctl
+# https://github.com/projectcalico/calicoctl/releases/download/v3.20.6/calicoctl-linux-amd64
+RUN wget https://github.com/projectcalico/calicoctl/releases/download/${CALICO_VERSION}/calicoctl-linux-$(cat arch.txt)
+RUN mv calicoctl-linux-$(cat arch.txt) calicoctl
+RUN chmod +x calicoctl etcdctl
+
+
+FROM debian:11
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-updates main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian/ bullseye-backports main contrib non-free\ndeb http://mirrors.tuna.tsinghua.edu.cn/debian-security bullseye-security main contrib non-free\n" > /etc/apt/sources.list
+# apt install ansible=$(eval echo $(apt-cache madison ansible | grep 2.10.7 | awk -F'|' '{print $2}'))
+ENV ANSIBLE_VERSION=2.10.8
+RUN apt-get update && apt-get install ansible=$(eval echo $(apt-cache madison ansible | grep "$ANSIBLE_VERSION" |head -n 1 | awk -F'|' '{print $2}')) sshpass jq -y
+COPY --from=builder /workspace/etcdctl /usr/local/bin/etcdctl
+COPY --from=builder /workspace/calicoctl /usr/local/bin/calicoctl
