@@ -11,13 +11,17 @@ var (
 	// used for flags
 	cfgFile     string
 	userLicense string
-
-	rootCmd = &cobra.Command{
+	author      *string
+	rootCmd     = &cobra.Command{
 		Use:   "cobra-cli",
 		Short: "A generator for Cobra based Applications",
 		Long: `Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(cfgFile, userLicense)
+			fmt.Println(*author)
+		},
 	}
 )
 
@@ -51,7 +55,7 @@ func init() {
 	// cobra-cli --config file
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
 	// cobra-cli -a / --author
-	rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
+	author = rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
 	// cobra-cli -l / --license
 	rootCmd.PersistentFlags().StringVarP(&userLicense, "License", "l", "", "name of license for project")
 	// cobra-cli --viper

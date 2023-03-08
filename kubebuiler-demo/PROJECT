@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: kubebuiler-demo
 repo: kubebuilder-demo
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: example.com
+  group: app-operator.aliyun.com
+  kind: Application
+  path: kubebuilder-demo/api/v1
+  version: v1
 version: "3"

@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	appoperatoraliyuncomv1 "kubebuilder-demo/api/v1"
 	metricsk8siov1beta1 "kubebuilder-demo/api/v1beta1"
 	"kubebuilder-demo/controllers"
 	//+kubebuilder:scaffold:imports
@@ -45,6 +46,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(metricsk8siov1beta1.AddToScheme(scheme))
+	utilruntime.Must(appoperatoraliyuncomv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -94,6 +96,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NodeMetrics")
+		os.Exit(1)
+	}
+	if err = (&controllers.ApplicationReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
