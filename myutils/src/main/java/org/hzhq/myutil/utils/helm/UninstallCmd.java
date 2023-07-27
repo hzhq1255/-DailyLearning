@@ -1,13 +1,14 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
+
+import org.hzhq.myutil.exception.HelmException;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 上午2:02
- * helm uninstall --help
+ * @since 2023-03-09 上午2:02 helm uninstall --help
  */
 public class UninstallCmd extends RootCmd implements GlobalFlags<UninstallCmd> {
     private static final String COMMAND_NAME = "uninstall";
@@ -18,8 +19,6 @@ public class UninstallCmd extends RootCmd implements GlobalFlags<UninstallCmd> {
     private boolean noHooks;
     private Duration timeout;
     private boolean wait;
-
-
 
     public UninstallCmd releaseName(String releaseName) {
         this.releaseName = releaseName;
@@ -58,32 +57,32 @@ public class UninstallCmd extends RootCmd implements GlobalFlags<UninstallCmd> {
 
     @Override
     public UninstallCmd burstLimit(Integer burstLimit) {
-        return ((UninstallCmd) super.burstLimit(burstLimit));
+        return ((UninstallCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public UninstallCmd debug() {
-        return ((UninstallCmd) super.debug());
+        return ((UninstallCmd)super.debug());
     }
 
     @Override
     public UninstallCmd help() {
-        return ((UninstallCmd) super.help());
+        return ((UninstallCmd)super.help());
     }
 
     @Override
     public UninstallCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((UninstallCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((UninstallCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public UninstallCmd kubeCAFile(String kubeCAFile) {
-        return ((UninstallCmd) super.kubeCAFile(kubeCAFile));
+        return ((UninstallCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public UninstallCmd kubeContext(String kubeContext) {
-        return ((UninstallCmd) super.kubeContext(kubeContext));
+        return ((UninstallCmd)super.kubeContext(kubeContext));
     }
 
     @Override
@@ -142,11 +141,16 @@ public class UninstallCmd extends RootCmd implements GlobalFlags<UninstallCmd> {
 
     @Override
     public UninstallCmd kubeAsUser(String kubeAsUser) {
-        return ((UninstallCmd) super.kubeAsUser(kubeAsUser));
+        return ((UninstallCmd)super.kubeAsUser(kubeAsUser));
+    }
+
+    public UninstallCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
     }
 
     public UninstallCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (releaseName != null) {
             this.args.add(releaseName);
         }
@@ -176,26 +180,29 @@ public class UninstallCmd extends RootCmd implements GlobalFlags<UninstallCmd> {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObjs(clazz);
+    public String execIgnoreNotFound() {
+        try {
+            return super.exec();
+        } catch (HelmException e) {
+            String errMsg = e.getMessage().toLowerCase();
+            if (!errMsg.contains("not found")) {
+                throw e;
+            }
+        }
+        return "";
     }
+
 }
-

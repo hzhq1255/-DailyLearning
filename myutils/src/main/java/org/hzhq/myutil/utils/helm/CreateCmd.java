@@ -1,12 +1,11 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 上午1:23
- * helm create --help
+ * @since 2023-03-09 上午1:23 helm create --help
  */
 public class CreateCmd extends RootCmd implements GlobalFlags<CreateCmd> {
     private static final String COMMAND_NAME = "create";
@@ -17,8 +16,6 @@ public class CreateCmd extends RootCmd implements GlobalFlags<CreateCmd> {
         this.name = name;
         return this;
     }
-
-
 
     public CreateCmd starter(String starter) {
         this.starter = starter;
@@ -57,9 +54,8 @@ public class CreateCmd extends RootCmd implements GlobalFlags<CreateCmd> {
 
     @Override
     public CreateCmd kubeAsUser(String kubeAsUser) {
-        return (CreateCmd) super.kubeAsUser(kubeAsUser);
+        return (CreateCmd)super.kubeAsUser(kubeAsUser);
     }
-
 
     @Override
     public CreateCmd kubeAsGroup(String... kubeAsGroup) {
@@ -123,28 +119,27 @@ public class CreateCmd extends RootCmd implements GlobalFlags<CreateCmd> {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
+    }
+
+    public CreateCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
     }
 
     @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        return super.execToObjs(clazz);
-    }
-
     public CreateCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (name != null) {
             this.args.add(name);
         }
@@ -156,7 +151,4 @@ public class CreateCmd extends RootCmd implements GlobalFlags<CreateCmd> {
         return this;
     }
 
-
 }
-
-

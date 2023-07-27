@@ -1,7 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm;
-
-
-import com.skyview.caas.common.util.helm.response.HelmInstall;
+package org.hzhq.myutil.utils.helm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,8 +7,8 @@ import java.util.List;
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 11:50
- * helm install --help
+ * @since 2023-03-09 11:50 <br/>
+ *        helm install --help
  */
 public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
     private static final String COMMAND_NAME = "install";
@@ -52,8 +49,7 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
     private final List<String> values = new ArrayList<>();
     private boolean verify;
     private String version;
-//    private boolean help;
-
+    // private boolean help;
 
     public InstallCmd name(String name) {
         this.name = name;
@@ -64,7 +60,6 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
         this.chart = chart;
         return this;
     }
-
 
     public InstallCmd caFile(String caFile) {
         this.caFile = caFile;
@@ -156,7 +151,7 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
         return this;
     }
 
-    public InstallCmd output(OutputType type){
+    public InstallCmd output(OutputType type) {
         this.output = type.name();
         return this;
     }
@@ -170,7 +165,6 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
         this.password = password;
         return this;
     }
-
 
     public InstallCmd postRenderer(String postRenderer) {
         this.postRenderer = postRenderer;
@@ -249,38 +243,38 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
 
     @Override
     public InstallCmd help() {
-        this.help =true;
+        this.help = true;
         return this;
     }
 
     @Override
     public InstallCmd burstLimit(Integer burstLimit) {
-        return (InstallCmd) super.burstLimit(burstLimit);
+        return (InstallCmd)super.burstLimit(burstLimit);
     }
 
     @Override
     public InstallCmd debug() {
-        return (InstallCmd) super.debug();
+        return (InstallCmd)super.debug();
     }
 
     @Override
     public InstallCmd kubeAsGroup(String... kubeAsGroup) {
-        return (InstallCmd) super.kubeAsGroup(kubeAsGroup);
+        return (InstallCmd)super.kubeAsGroup(kubeAsGroup);
     }
 
     @Override
     public InstallCmd kubeAsUser(String kubeAsUser) {
-        return ((InstallCmd) super.kubeAsUser(kubeAsUser));
+        return ((InstallCmd)super.kubeAsUser(kubeAsUser));
     }
 
     @Override
     public InstallCmd kubeCAFile(String kubeCAFile) {
-        return (InstallCmd) super.kubeCAFile(kubeCAFile);
+        return (InstallCmd)super.kubeCAFile(kubeCAFile);
     }
 
     @Override
     public InstallCmd kubeContext(String kubeContext) {
-        return (InstallCmd) super.kubeContext(kubeContext);
+        return (InstallCmd)super.kubeContext(kubeContext);
     }
 
     @Override
@@ -337,8 +331,13 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
         return this;
     }
 
+    public InstallCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public InstallCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (name != null) {
             this.args.add(name);
         }
@@ -488,44 +487,31 @@ public class InstallCmd extends RootCmd implements GlobalFlags<InstallCmd> {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
-        String result =  super.exec();
+        String result = super.exec();
         List<String> tempFiles = new ArrayList<>();
         tempFiles.addAll(this.setFile);
         tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
         return result;
     }
 
     @Override
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
+  }
+
+    @Override
     public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        T obj = super.execToObj(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return obj;
+        return super.execToObj(clazz);
     }
 
     @Override
     public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        List<T> objs = super.execToObjs(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return objs;
+        return super.execToObjs(clazz);
     }
 
-    public HelmInstall get() {
-        return this.execToObj(HelmInstall.class);
-    }
 }

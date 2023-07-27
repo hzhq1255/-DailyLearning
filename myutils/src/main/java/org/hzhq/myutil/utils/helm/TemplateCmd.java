@@ -1,4 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -8,8 +8,8 @@ import java.util.List;
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 14:06
- * helm template --help
+ * @since 2023-03-09 14:06 <br/>
+ *        helm template --help
  *
  */
 public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
@@ -198,7 +198,7 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
         return this;
     }
 
-    public TemplateCmd postRendererArgs(String ...postRendererArgs) {
+    public TemplateCmd postRendererArgs(String... postRendererArgs) {
         this.postRendererArgs.addAll(Arrays.asList(postRendererArgs));
         return this;
     }
@@ -223,27 +223,27 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
         return this;
     }
 
-    public TemplateCmd set(String ...set) {
+    public TemplateCmd set(String... set) {
         this.set.addAll(Arrays.asList(set));
         return this;
     }
 
-    public TemplateCmd setFile(String ...setFile) {
+    public TemplateCmd setFile(String... setFile) {
         this.setFile.addAll(Arrays.asList(setFile));
         return this;
     }
 
-    public TemplateCmd setJSON(String ...setJSON) {
+    public TemplateCmd setJSON(String... setJSON) {
         this.setJSON.addAll(Arrays.asList(setJSON));
         return this;
     }
 
-    public TemplateCmd setString(String ...setString) {
+    public TemplateCmd setString(String... setString) {
         this.setString.addAll(Arrays.asList(setString));
         return this;
     }
 
-    public TemplateCmd showOnly(String ...showOnly) {
+    public TemplateCmd showOnly(String... showOnly) {
         this.showOnly.addAll(Arrays.asList(showOnly));
         return this;
     }
@@ -273,8 +273,8 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
         return this;
     }
 
-    public TemplateCmd values(List<String> values) {
-        this.values.addAll(values);
+    public TemplateCmd values(String... values) {
+        this.values.addAll(Arrays.asList(values));
         return this;
     }
 
@@ -298,35 +298,34 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
         return this;
     }
 
-
     @Override
     public TemplateCmd burstLimit(Integer burstLimit) {
-        return ((TemplateCmd) super.burstLimit(burstLimit));
+        return ((TemplateCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public TemplateCmd debug() {
-        return ((TemplateCmd) super.debug());
+        return ((TemplateCmd)super.debug());
     }
 
     @Override
     public TemplateCmd help() {
-        return ((TemplateCmd) super.help());
+        return ((TemplateCmd)super.help());
     }
 
     @Override
     public TemplateCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((TemplateCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((TemplateCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public TemplateCmd kubeCAFile(String kubeCAFile) {
-        return ((TemplateCmd) super.kubeCAFile(kubeCAFile));
+        return ((TemplateCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public TemplateCmd kubeContext(String kubeContext) {
-        return ((TemplateCmd) super.kubeContext(kubeContext));
+        return ((TemplateCmd)super.kubeContext(kubeContext));
     }
 
     @Override
@@ -385,11 +384,16 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
 
     @Override
     public TemplateCmd kubeAsUser(String kubeAsUser) {
-        return ((TemplateCmd) super.kubeAsUser(kubeAsUser));
+        return ((TemplateCmd)super.kubeAsUser(kubeAsUser));
+    }
+
+    public TemplateCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
     }
 
     public TemplateCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (name != null) {
             this.args.add(name);
         }
@@ -503,20 +507,20 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
             this.args.add("--repo");
             this.args.add(repo);
         }
-        if (!set.isEmpty()){
+        if (!set.isEmpty()) {
             for (String s : set) {
                 this.args.add("--set");
                 this.args.add(s);
             }
         }
-        if (!setFile.isEmpty()){
+        if (!setFile.isEmpty()) {
             List<String> valueFiles = super.createTempFiles(setFile.toArray(String[]::new));
             for (String s : valueFiles) {
                 this.args.add("--set-file");
                 this.args.add(s);
             }
         }
-        if (!setJSON.isEmpty()){
+        if (!setJSON.isEmpty()) {
             for (String s : setJSON) {
                 this.args.add("--set-json");
                 this.args.add(s);
@@ -552,7 +556,7 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
         if (validate) {
             this.args.add("--validate");
         }
-        if (!values.isEmpty()){
+        if (!values.isEmpty()) {
             List<String> valueFiles = super.createTempFiles(values.toArray(String[]::new));
             for (String value : valueFiles) {
                 this.args.add("-f");
@@ -578,40 +582,18 @@ public class TemplateCmd extends RootCmd implements GlobalFlags<TemplateCmd> {
 
     @Override
     protected String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
         this.buildArgs();
-        String result =  super.exec();
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return result;
+        return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        T obj = super.execToObj(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return obj;
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        List<T> objs = super.execToObjs(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return objs;
-    }
 }

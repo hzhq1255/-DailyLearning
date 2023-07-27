@@ -1,4 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm.response;
+package org.hzhq.myutil.utils.helm.response;
 
 import lombok.Data;
 

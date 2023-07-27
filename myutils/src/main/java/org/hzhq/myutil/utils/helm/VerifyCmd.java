@@ -1,14 +1,14 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 14:32
- * helm verify --help
+ * @since 2023-03-09 14:32 <br/>
+ *        helm verify --help
  */
-public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd>{
+public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd> {
 
     private static final String COMMAND_NAME = "verify";
     private String path;
@@ -16,32 +16,32 @@ public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd>{
 
     @Override
     public VerifyCmd burstLimit(Integer burstLimit) {
-        return ((VerifyCmd) super.burstLimit(burstLimit));
+        return ((VerifyCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public VerifyCmd debug() {
-        return ((VerifyCmd) super.debug());
+        return ((VerifyCmd)super.debug());
     }
 
     @Override
     public VerifyCmd help() {
-        return ((VerifyCmd) super.help());
+        return ((VerifyCmd)super.help());
     }
 
     @Override
     public VerifyCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((VerifyCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((VerifyCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public VerifyCmd kubeCAFile(String kubeCAFile) {
-        return ((VerifyCmd) super.kubeCAFile(kubeCAFile));
+        return ((VerifyCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public VerifyCmd kubeContext(String kubeContext) {
-        return ((VerifyCmd) super.kubeContext(kubeContext));
+        return ((VerifyCmd)super.kubeContext(kubeContext));
     }
 
     @Override
@@ -98,10 +98,9 @@ public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd>{
         return this;
     }
 
-
     @Override
     public VerifyCmd kubeAsUser(String kubeAsUser) {
-        return ((VerifyCmd) super.kubeAsUser(kubeAsUser));
+        return ((VerifyCmd)super.kubeAsUser(kubeAsUser));
     }
 
     public VerifyCmd path(String path) {
@@ -109,14 +108,18 @@ public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd>{
         return this;
     }
 
-
     public VerifyCmd keyring(String keyring) {
         this.keyring = keyring;
         return this;
     }
 
+    public VerifyCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public VerifyCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (path != null) {
             this.args.add(path);
         }
@@ -130,25 +133,17 @@ public class VerifyCmd extends RootCmd implements GlobalFlags<VerifyCmd>{
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObjs(clazz);
-    }
 }

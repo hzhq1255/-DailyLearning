@@ -1,15 +1,15 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 上午1:59
- * helm rollback --help
+ * @since 2023-03-09 上午1:59 <br/>
+ *        helm rollback --help
  */
-public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd>  {
+public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd> {
     private static final String COMMAND_NAME = "rollback";
     private String releaseName;
     private int revision;
@@ -80,32 +80,32 @@ public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd>  {
 
     @Override
     public RollbackCmd burstLimit(Integer burstLimit) {
-        return ((RollbackCmd) super.burstLimit(burstLimit));
+        return ((RollbackCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public RollbackCmd debug() {
-        return ((RollbackCmd) super.debug());
+        return ((RollbackCmd)super.debug());
     }
 
     @Override
     public RollbackCmd help() {
-        return ((RollbackCmd) super.help());
+        return ((RollbackCmd)super.help());
     }
 
     @Override
     public RollbackCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((RollbackCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((RollbackCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public RollbackCmd kubeCAFile(String kubeCAFile) {
-        return ((RollbackCmd) super.kubeCAFile(kubeCAFile));
+        return ((RollbackCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public RollbackCmd kubeContext(String kubeContext) {
-        return ((RollbackCmd) super.kubeContext(kubeContext));
+        return ((RollbackCmd)super.kubeContext(kubeContext));
     }
 
     @Override
@@ -146,7 +146,7 @@ public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd>  {
 
     @Override
     public RollbackCmd kubeAsUser(String kubeAsUser) {
-        return ((RollbackCmd) super.kubeAsUser(kubeAsUser));
+        return ((RollbackCmd)super.kubeAsUser(kubeAsUser));
     }
 
     @Override
@@ -167,8 +167,13 @@ public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd>  {
         return this;
     }
 
+    public RollbackCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public RollbackCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (releaseName != null) {
             this.args.add(releaseName);
         }
@@ -210,26 +215,17 @@ public class RollbackCmd extends RootCmd implements GlobalFlags<RollbackCmd>  {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObjs(clazz);
-    }
 }
-

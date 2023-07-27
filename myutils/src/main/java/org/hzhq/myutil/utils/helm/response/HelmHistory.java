@@ -1,4 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm.response;
+package org.hzhq.myutil.utils.helm.response;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import lombok.Data;
  */
 @Data
 public class HelmHistory {
-    private String revision;
+    private Integer revision;
     private String updated;
     private String status;
     private String chart;

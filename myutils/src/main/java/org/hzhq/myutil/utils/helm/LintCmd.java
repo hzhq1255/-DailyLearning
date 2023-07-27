@@ -1,5 +1,7 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,12 +14,12 @@ public class LintCmd extends RootCmd implements GlobalFlags<LintCmd> {
     private static final String COMMAND_NAME = "lint";
     private String path;
     private boolean quiet;
-    private String set;
-    private String setFile;
-    private String setJson;
-    private String setString;
+    private final List<String> set = new ArrayList<>();
+    private final List<String> setFile = new ArrayList<>();
+    private final List<String> setJSON = new ArrayList<>();
+    private final List<String> setString = new ArrayList<>();
     private boolean strict;
-    private List<String> values;
+    private final List<String> values = new ArrayList<>();
     private boolean withSubcharts;
 
     public LintCmd path(String path) {
@@ -25,28 +27,28 @@ public class LintCmd extends RootCmd implements GlobalFlags<LintCmd> {
         return this;
     }
 
-    public LintCmd quiet(boolean quiet) {
-        this.quiet = quiet;
+    public LintCmd quiet() {
+        this.quiet = true;
         return this;
     }
 
-    public LintCmd set(String set) {
-        this.set = set;
+    public LintCmd set(String... set) {
+        this.set.addAll(Arrays.asList(set));
         return this;
     }
 
-    public LintCmd setFile(String setFile) {
-        this.setFile = setFile;
+    public LintCmd setFile(String... setFile) {
+        this.setFile.addAll(Arrays.asList(setFile));
         return this;
     }
 
-    public LintCmd setJson(String setJson) {
-        this.setJson = setJson;
+    public LintCmd setJSON(String setJSON) {
+        this.setJSON.addAll(Arrays.asList(setJSON));
         return this;
     }
 
-    public LintCmd setString(String setString) {
-        this.setString = setString;
+    public LintCmd setString(String... setString) {
+        this.setString.addAll(Arrays.asList(setString));
         return this;
     }
 
@@ -55,13 +57,13 @@ public class LintCmd extends RootCmd implements GlobalFlags<LintCmd> {
         return this;
     }
 
-    public LintCmd values(List<String> values) {
-        this.values = values;
+    public LintCmd values(String... values) {
+        this.values.addAll(Arrays.asList(values));
         return this;
     }
 
-    public LintCmd withSubcharts(boolean withSubcharts) {
-        this.withSubcharts = withSubcharts;
+    public LintCmd withSubcharts() {
+        this.withSubcharts = true;
         return this;
     }
 
@@ -156,35 +158,52 @@ public class LintCmd extends RootCmd implements GlobalFlags<LintCmd> {
         return this;
     }
 
+    public LintCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public LintCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (path != null) {
             this.args.add(path);
         }
         if (quiet) {
             this.args.add("--quiet");
         }
-        if (set != null) {
-            this.args.add("--set");
-            this.args.add(set);
+        if (!set.isEmpty()) {
+            for (String s : set) {
+                this.args.add("--set");
+                this.args.add(s);
+            }
         }
-        if (setFile != null) {
-            this.args.add("--set-file");
-            this.args.add(setFile);
+        if (!setFile.isEmpty()) {
+            List<String> setFiles = super.createTempFiles(setFile.toArray(String[]::new));
+            for (String value : setFiles) {
+                this.args.add("--set-file");
+                this.args.add(value);
+            }
         }
-        if (setJson != null) {
-            this.args.add("--set-json");
-            this.args.add(setJson);
+        if (!setJSON.isEmpty()) {
+            List<String> setJSONs = super.createTempFiles(setJSON.toArray(String[]::new));
+            for (String value : setJSONs) {
+                this.args.add("--set-json");
+                this.args.add(value);
+            }
         }
-        if (setString != null) {
-            this.args.add("--set-string");
-            this.args.add(setString);
+        if (!setString.isEmpty()) {
+            List<String> setStrings = super.createTempFiles(setString.toArray(String[]::new));
+            for (String value : setStrings) {
+                this.args.add("--set-string");
+                this.args.add(value);
+            }
         }
         if (strict) {
             this.args.add("--strict");
         }
-        if (values != null) {
-            for (String value : values) {
+        if (!values.isEmpty()) {
+            List<String> valueFiles = super.createTempFiles(values.toArray(String[]::new));
+            for (String value : valueFiles) {
                 this.args.add("-f");
                 this.args.add(value);
             }
@@ -198,25 +217,17 @@ public class LintCmd extends RootCmd implements GlobalFlags<LintCmd> {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObjs(clazz);
-    }
 }

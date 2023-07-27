@@ -1,4 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,8 @@ import java.util.List;
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 上午1:53
- * helm package --help
+ * @since 2023-03-09 上午1:53 <br/>
+ *        helm package --help
  */
 public class PackageCmd extends RootCmd implements GlobalFlags<PackageCmd> {
     private static final String COMMAND_NAME = "package";
@@ -74,37 +74,37 @@ public class PackageCmd extends RootCmd implements GlobalFlags<PackageCmd> {
 
     @Override
     public PackageCmd burstLimit(Integer burstLimit) {
-        return ((PackageCmd) super.burstLimit(burstLimit));
+        return ((PackageCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public PackageCmd debug() {
-        return ((PackageCmd) super.debug());
+        return ((PackageCmd)super.debug());
     }
 
     @Override
     public PackageCmd help() {
-        return ((PackageCmd) super.help());
+        return ((PackageCmd)super.help());
     }
 
     @Override
     public PackageCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((PackageCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((PackageCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public PackageCmd kubeAsUser(String kubeAsUser) {
-        return ((PackageCmd) super.kubeAsUser(kubeAsUser));
+        return ((PackageCmd)super.kubeAsUser(kubeAsUser));
     }
 
     @Override
     public PackageCmd kubeCAFile(String kubeCAFile) {
-        return ((PackageCmd) super.kubeCAFile(kubeCAFile));
+        return ((PackageCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public PackageCmd kubeContext(String kubeContext) {
-        return ((PackageCmd) super.kubeContext(kubeContext));
+        return ((PackageCmd)super.kubeContext(kubeContext));
     }
 
     @Override
@@ -161,8 +161,13 @@ public class PackageCmd extends RootCmd implements GlobalFlags<PackageCmd> {
         return this;
     }
 
+    public PackageCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public PackageCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         this.args.addAll(this.chartPaths);
         if (appVersion != null) {
             this.args.add("--app-version");
@@ -204,25 +209,17 @@ public class PackageCmd extends RootCmd implements GlobalFlags<PackageCmd> {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObj(clazz);
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
-    @Override
-    public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        return super.execToObjs(clazz);
-    }
 }

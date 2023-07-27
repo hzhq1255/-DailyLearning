@@ -1,17 +1,15 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
-import com.skyview.caas.common.util.helm.response.HelmList;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-08 12:27
- * helm list --help
+ * @since 2023-03-08 12:27 <br/>
+ *        helm list --help
  */
-public class ListCmd extends RootCmd implements GlobalFlags<ListCmd>  {
+public class ListCmd extends RootCmd implements GlobalFlags<ListCmd> {
     private static final String COMMAND_NAME = "list";
     private boolean all;
     private boolean allNamespaces;
@@ -82,12 +80,10 @@ public class ListCmd extends RootCmd implements GlobalFlags<ListCmd>  {
         return this;
     }
 
-    public ListCmd output(OutputType type){
+    public ListCmd output(OutputType type) {
         this.output = type.name();
         return this;
     }
-
-
 
     public ListCmd pending() {
         this.pending = true;
@@ -131,36 +127,37 @@ public class ListCmd extends RootCmd implements GlobalFlags<ListCmd>  {
 
     @Override
     public ListCmd burstLimit(Integer burstLimit) {
-        return ((ListCmd) super.burstLimit(burstLimit));
+        return ((ListCmd)super.burstLimit(burstLimit));
     }
 
     @Override
     public ListCmd debug() {
-        return ((ListCmd) super.debug());
+        return ((ListCmd)super.debug());
     }
 
     @Override
     public ListCmd help() {
-        return ((ListCmd) super.help());
+        return ((ListCmd)super.help());
     }
 
     @Override
     public ListCmd kubeAsGroup(String... kubeAsGroup) {
-        return ((ListCmd) super.kubeAsGroup(kubeAsGroup));
+        return ((ListCmd)super.kubeAsGroup(kubeAsGroup));
     }
 
     @Override
     public ListCmd kubeAsUser(String kubeAsUser) {
-        return ((ListCmd) super.kubeAsUser(kubeAsUser));
+        return ((ListCmd)super.kubeAsUser(kubeAsUser));
     }
+
     @Override
     public ListCmd kubeCAFile(String kubeCAFile) {
-        return ((ListCmd) super.kubeCAFile(kubeCAFile));
+        return ((ListCmd)super.kubeCAFile(kubeCAFile));
     }
 
     @Override
     public ListCmd kubeContext(String kubeContext) {
-        return (ListCmd) super.kubeContext(kubeContext);
+        return (ListCmd)super.kubeContext(kubeContext);
     }
 
     @Override
@@ -217,8 +214,14 @@ public class ListCmd extends RootCmd implements GlobalFlags<ListCmd>  {
         return this;
     }
 
+    public ListCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
+    @Override
     public ListCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (all) {
             this.args.add("--all");
         }
@@ -291,38 +294,27 @@ public class ListCmd extends RootCmd implements GlobalFlags<ListCmd>  {
 
     @Override
     public String buildCmd() {
-        this.buildArgs();
         return super.buildCmd();
     }
 
     @Override
     public String exec() {
-        this.buildArgs();
         return super.exec();
     }
 
     @Override
-    public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
+    }
 
+    @Override
+    public <T> T execToObj(Class<T> clazz) {
         return super.execToObj(clazz);
     }
 
     @Override
     public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
         return super.execToObjs(clazz);
     }
 
-    public List<HelmList> get() {
-        if (this.shortOutput) {
-            List<String> list = this.execToObjs(String.class);
-            return list.stream().map(l -> {
-                HelmList helmList = new HelmList();
-                helmList.setName(l);
-                return helmList;
-            }).collect(Collectors.toList());
-        }
-        return super.execToObjs(HelmList.class);
-    }
 }

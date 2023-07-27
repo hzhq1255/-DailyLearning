@@ -1,4 +1,4 @@
-package org.hzhq.myutil.utils.helm.helm;
+package org.hzhq.myutil.utils.helm;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -8,9 +8,8 @@ import java.util.List;
 /**
  * @author hzhq1255
  * @version 1.0
- * @since 2023-03-09 上午9:20
- * Usage:
- * helm upgrade --help
+ * @since 2023-03-09 上午9:20 <br/>
+ * Usage: helm upgrade --help
  */
 public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
     private static final String COMMAND_NAME = "upgrade";
@@ -125,7 +124,6 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
         return this;
     }
 
-
     public UpgradeCmd historyMax(int historyMax) {
         this.historyMax = historyMax;
         return this;
@@ -161,7 +159,7 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
         return this;
     }
 
-    public UpgradeCmd output(OutputType type){
+    public UpgradeCmd output(OutputType type) {
         this.output = type.name();
         return this;
     }
@@ -181,7 +179,7 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
         return this;
     }
 
-    public UpgradeCmd postRendererArgs(String ...postRendererArgs) {
+    public UpgradeCmd postRendererArgs(String... postRendererArgs) {
         this.postRendererArgs.addAll(Arrays.asList(postRendererArgs));
         return this;
     }
@@ -201,7 +199,7 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
         return this;
     }
 
-    public UpgradeCmd values(String ...values) {
+    public UpgradeCmd values(String... values) {
         this.values.addAll(Arrays.asList(values));
         return this;
     }
@@ -350,8 +348,13 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
         return ((UpgradeCmd) super.kubeAsUser(kubeAsUser));
     }
 
+    public UpgradeCmd() {
+        super();
+        this.cmds.add(COMMAND_NAME);
+    }
+
     public UpgradeCmd buildArgs() {
-        this.args.add(COMMAND_NAME);
+        this.args = new ArrayList<>();
         if (releaseName != null) {
             this.args.add(releaseName);
         }
@@ -515,35 +518,21 @@ public class UpgradeCmd extends RootCmd implements GlobalFlags<UpgradeCmd> {
     }
 
     public String exec() {
-        this.buildArgs();
-        String result =  super.exec();
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return result;
+        return super.exec();
+    }
+
+    @Override
+    public String exec(long timoutMillSeconds) {
+        return super.exec(timoutMillSeconds);
     }
 
     @Override
     public <T> T execToObj(Class<T> clazz) {
-        this.buildArgs();
-        T obj = super.execToObj(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return obj;
+        return super.execToObj(clazz);
     }
 
     @Override
     public <T> List<T> execToObjs(Class<T> clazz) {
-        this.buildArgs();
-        List<T> objs = super.execToObjs(clazz);
-        List<String> tempFiles = new ArrayList<>();
-        tempFiles.addAll(this.setFile);
-        tempFiles.addAll(this.values);
-        cleanTempFiles(tempFiles.toArray(String[]::new));
-        return objs;
+        return super.execToObjs(clazz);
     }
 }
-
