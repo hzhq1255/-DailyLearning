@@ -24,8 +24,8 @@ func newZapLogger(level Level) LoggerInf {
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     zapcore.RFC3339TimeEncoder,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 	zapConfig := &zap.Config{
@@ -39,7 +39,7 @@ func newZapLogger(level Level) LoggerInf {
 		OutputPaths:       []string{"stderr"},
 		ErrorOutputPaths:  []string{"stderr"},
 	}
-	l, err := zapConfig.Build(zap.AddCallerSkip(1))
+	l, err := zapConfig.Build(zap.AddCallerSkip(2))
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "zap build logger failed err: %v", err)
 		return nil
@@ -90,11 +90,12 @@ func (z *ZapLogger) Errorf(format string, args ...any) {
 	z.logger.Sugar().Errorf(format, args...)
 }
 
-func (z *ZapLogger) WithName(name string) {
+func (z *ZapLogger) WithName(name string) LoggerInf {
 	z.logger = z.logger.Named(name)
+	return z
 }
 
-func (z *ZapLogger) WithKeysAndValues(keysAndValues ...any) {
+func (z *ZapLogger) WithKeysAndValues(keysAndValues ...any) LoggerInf {
 	var fields []zap.Field
 	for i := 0; i < len(keysAndValues); i += 2 {
 		key := keysAndValues[i]
@@ -105,4 +106,5 @@ func (z *ZapLogger) WithKeysAndValues(keysAndValues ...any) {
 		fields = append(fields, zap.Any(fmt.Sprint(key), value))
 	}
 	z.logger = z.logger.With(fields...)
+	return z
 }

@@ -19,6 +19,7 @@ func Test_Quick_Log(t *testing.T) {
 
 func Test_append_file(t *testing.T) {
 	log := newSlogLogger(LevelInfo, true)
+	log.WithName("test")
 	log.Infow("Info message", "a", "b")
 	log.Infof("Info message %s ", "a")
 }

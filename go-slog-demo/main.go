@@ -1,8 +1,7 @@
 package main
 
-import "golang.org/x/exp/slog"
+import "hzhq1255/slog-demo/pkg/log"
 
 func main() {
-	slog.Debug("test")
-
+	log.Infof("test %v", "a")
 }

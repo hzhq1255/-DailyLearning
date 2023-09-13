@@ -5,6 +5,7 @@ import (
 	"golang.org/x/exp/slog"
 	"os"
 	"runtime"
+	"strings"
 )
 
 type SlogLogger struct {
@@ -32,68 +33,70 @@ func newSlogLogger(level Level, addSource bool) LoggerInf {
 }
 
 func (s *SlogLogger) Infow(msg string, keysAndValues ...any) {
-	s.logger.Info(msg, s.AppendLocation(keysAndValues...)...)
+	s.logger.Info(msg, s.AppendCaller(keysAndValues...)...)
 }
 
 func (s *SlogLogger) Warnw(msg string, keysAndValues ...any) {
-	s.logger.Warn(msg, s.AppendLocation(keysAndValues...)...)
+	s.logger.Warn(msg, s.AppendCaller(keysAndValues...)...)
 }
 
 func (s *SlogLogger) Debugw(msg string, keysAndValues ...any) {
-	s.logger.Debug(msg, s.AppendLocation(keysAndValues...)...)
+	s.logger.Debug(msg, s.AppendCaller(keysAndValues...)...)
 }
 
 func (s *SlogLogger) Fatalw(msg string, keysAndValues ...any) {
-	s.logger.Error(msg, s.AppendLocation(keysAndValues...)...)
+	s.logger.Error(msg, s.AppendCaller(keysAndValues...)...)
 }
 
 func (s *SlogLogger) Errorw(msg string, keysAndValues ...any) {
-	s.logger.Error(msg, s.AppendLocation(keysAndValues...)...)
+	s.logger.Error(msg, s.AppendCaller(keysAndValues...)...)
 }
 
 func (s *SlogLogger) Infof(format string, args ...any) {
-	s.logger.Info(fmt.Sprintf(format, args...), s.AppendLocation()...)
+	s.logger.Info(fmt.Sprintf(format, args...), s.AppendCaller()...)
 }
 
 func (s *SlogLogger) Warnf(format string, args ...any) {
-	s.logger.Warn(fmt.Sprintf(format, args...), s.AppendLocation()...)
+	s.logger.Warn(fmt.Sprintf(format, args...), s.AppendCaller()...)
 }
 
 func (s *SlogLogger) Debugf(format string, args ...any) {
-	s.logger.Debug(fmt.Sprintf(format, args...), s.AppendLocation()...)
+	s.logger.Debug(fmt.Sprintf(format, args...), s.AppendCaller()...)
 }
 
 func (s *SlogLogger) Fatalf(format string, args ...any) {
-	s.logger.Error(fmt.Sprintf(format, args...), s.AppendLocation()...)
+	s.logger.Error(fmt.Sprintf(format, args...), s.AppendCaller()...)
 }
 
 func (s *SlogLogger) Errorf(format string, args ...any) {
-	s.logger.Error(fmt.Sprintf(format, args...), s.AppendLocation()...)
+	s.logger.Error(fmt.Sprintf(format, args...), s.AppendCaller()...)
+
 }
 
-func (s *SlogLogger) WithName(name string) {
-	s.logger = s.logger.WithGroup(name)
+func (s *SlogLogger) WithName(name string) LoggerInf {
+	s.logger = s.logger.With("logger", name)
+	return s
 }
 
-func (s *SlogLogger) WithKeysAndValues(keysAndValues ...any) {
+func (s *SlogLogger) WithKeysAndValues(keysAndValues ...any) LoggerInf {
 	s.logger = s.logger.With(keysAndValues...)
+	return s
 }
 
-func (s *SlogLogger) AppendLocation(keyValues ...any) []any {
+func (s *SlogLogger) AppendCaller(keyValues ...any) []any {
 	s.addSource = false
 	if !s.addSource {
 		var pc uintptr
 		var pcs [1]uintptr
 		// skip [runtime.Callers, this function, this function's caller]
-		runtime.Callers(3, pcs[:])
+		runtime.Callers(4, pcs[:])
 		pc = pcs[0]
 		fs := runtime.CallersFrames([]uintptr{pc})
 		f, _ := fs.Next()
-		keyValues = append(keyValues, "location", source{
-			Function: f.Function,
-			File:     f.File,
-			Line:     f.Line,
-		})
+		packageIndex := strings.LastIndex(f.Function, ".")
+		fileIndex := strings.LastIndex(f.File, "/")
+		file := f.Function[:packageIndex] + f.File[fileIndex:]
+		keyValues = append(keyValues, "caller", fmt.Sprintf("%s:%d", file, f.Line))
 		return keyValues
 
 	}
