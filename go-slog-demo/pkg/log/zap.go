@@ -70,6 +70,11 @@ func (z *ZapLogger) Errorw(msg string, keysAndValues ...any) {
 	z.logger.Sugar().Errorw(msg, keysAndValues...)
 }
 
+func (z *ZapLogger) ErrorStackW(error error, msg string, keysAndValues ...any) {
+	z.logger.Sugar().With("error", error.Error()).Errorw(msg, keysAndValues...)
+	printStack(4)
+}
+
 func (z *ZapLogger) Infof(format string, args ...any) {
 	z.logger.Sugar().Infof(format, args...)
 }
@@ -88,6 +93,11 @@ func (z *ZapLogger) Fatalf(format string, args ...any) {
 
 func (z *ZapLogger) Errorf(format string, args ...any) {
 	z.logger.Sugar().Errorf(format, args...)
+}
+
+func (z *ZapLogger) ErrorStackF(error error, format string, args ...any) {
+	z.logger.Sugar().With("error", error.Error()).Errorf(format, args...)
+	printStack(4)
 }
 
 func (z *ZapLogger) WithName(name string) LoggerInf {

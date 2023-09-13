@@ -52,6 +52,11 @@ func (s *SlogLogger) Errorw(msg string, keysAndValues ...any) {
 	s.logger.Error(msg, s.AppendCaller(keysAndValues...)...)
 }
 
+func (s *SlogLogger) ErrorStackW(error error, msg string, keysAndValues ...any) {
+	s.logger.With("error", error).Error(msg, s.AppendCaller(keysAndValues...)...)
+	printStack(4)
+}
+
 func (s *SlogLogger) Infof(format string, args ...any) {
 	s.logger.Info(fmt.Sprintf(format, args...), s.AppendCaller()...)
 }
@@ -70,6 +75,11 @@ func (s *SlogLogger) Fatalf(format string, args ...any) {
 
 func (s *SlogLogger) Errorf(format string, args ...any) {
 	s.logger.Error(fmt.Sprintf(format, args...), s.AppendCaller()...)
+}
+
+func (s *SlogLogger) ErrorStackF(error error, format string, args ...any) {
+	s.logger.With("error", error).Error(fmt.Sprintf(format, args...), s.AppendCaller()...)
+	printStack(4)
 
 }
 
@@ -98,7 +108,6 @@ func (s *SlogLogger) AppendCaller(keyValues ...any) []any {
 		file := f.Function[:packageIndex] + f.File[fileIndex:]
 		keyValues = append(keyValues, "caller", fmt.Sprintf("%s:%d", file, f.Line))
 		return keyValues
-
 	}
 	return keyValues
 }

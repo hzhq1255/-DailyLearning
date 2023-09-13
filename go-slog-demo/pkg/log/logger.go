@@ -1,5 +1,13 @@
 package log
 
+import (
+	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+)
+
 type LoggerInf interface {
 	WithName(name string) LoggerInf
 	WithKeysAndValues(keysAndValues ...any) LoggerInf
@@ -13,6 +21,7 @@ type StructLoggerInf interface {
 	Debugw(msg string, keysAndValues ...any)
 	Fatalw(msg string, keysAndValues ...any)
 	Errorw(msg string, keysAndValues ...any)
+	ErrorStackW(error error, msg string, keysAndValues ...any)
 }
 
 type FormatLoggerInf interface {
@@ -21,6 +30,7 @@ type FormatLoggerInf interface {
 	Debugf(format string, args ...any)
 	Fatalf(format string, args ...any)
 	Errorf(format string, args ...any)
+	ErrorStackF(error error, format string, args ...any)
 }
 
 type LoggerType string
@@ -76,6 +86,10 @@ func (l *Logger) Errorw(msg string, keysAndValues ...any) {
 	l.Logger.Errorw(msg, keysAndValues...)
 }
 
+func (l *Logger) ErrorStackW(error error, msg string, keysAndValues ...any) {
+	l.Logger.ErrorStackW(error, msg, keysAndValues...)
+}
+
 func (l *Logger) Infof(format string, args ...any) {
 	l.Logger.Infof(format, args...)
 }
@@ -94,4 +108,30 @@ func (l *Logger) Fatalf(format string, args ...any) {
 
 func (l *Logger) Errorf(format string, args ...any) {
 	l.Logger.Errorf(format, args...)
+}
+
+func (l *Logger) ErrorStackF(error error, format string, args ...any) {
+	l.Logger.ErrorStackF(error, format, args...)
+}
+
+func printStack(skip int) {
+	pcs := make([]uintptr, 32)
+	numFrames := runtime.Callers(skip, pcs)
+	for numFrames == len(pcs) {
+		pcs = make([]uintptr, len(pcs)*2)
+		numFrames = runtime.Callers(skip, pcs)
+	}
+	pcs = pcs[:numFrames]
+	frames := runtime.CallersFrames(pcs)
+	sb := strings.Builder{}
+	for frame, more := frames.Next(); more; frame, more = frames.Next() {
+		sb.WriteString(frame.Function)
+		sb.WriteByte('\n')
+		sb.WriteByte('\t')
+		sb.WriteString(frame.File)
+		sb.WriteByte(':')
+		sb.WriteString(strconv.Itoa(frame.Line))
+		sb.WriteByte('\n')
+	}
+	_, _ = fmt.Fprintln(os.Stderr, sb.String())
 }

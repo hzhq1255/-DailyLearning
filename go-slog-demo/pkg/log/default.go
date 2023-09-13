@@ -26,6 +26,10 @@ func Errorw(msg string, keysAndValues ...any) {
 	defaultLogger.Logger.Errorw(msg, keysAndValues...)
 }
 
+func ErrorStackW(error error, msg string, keysAndValues ...any) {
+	defaultLogger.Logger.ErrorStackW(error, msg, keysAndValues...)
+}
+
 func Infof(format string, args ...any) {
 	defaultLogger.Logger.Infof(format, args...)
 }
@@ -39,9 +43,13 @@ func Debugf(format string, args ...any) {
 }
 
 func Fatalf(format string, args ...any) {
-	defaultLogger.Fatalf(format, args...)
+	defaultLogger.Logger.Fatalf(format, args...)
 }
 
 func Errorf(format string, args ...any) {
-	defaultLogger.Errorf(format, args...)
+	defaultLogger.Logger.Errorf(format, args...)
+}
+
+func ErrorStackF(error error, format string, args ...any) {
+	defaultLogger.Logger.ErrorStackF(error, format, args...)
 }
