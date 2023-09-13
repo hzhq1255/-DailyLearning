@@ -107,3 +107,6 @@ client-go-learning/src/metrics-manager/bin
 ansible-demo/target
 kubebuiler-demo/bin
 client-go-learning/src/metrics-manager/bin
+**/bin
+**/target
+**/.idea
