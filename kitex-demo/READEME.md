@@ -187,3 +187,40 @@ cd hello && go run ./client
 ```
 
 
+## Thrift Validator (校验)
+
+```thrift
+struct Request {
+	1: string message (vt.max_size = "8", vt.prefix = "kitex-")
+}
+```
+
+生成的 `hello_validator.go` 文件中的校验方法。
+
+```go
+func (p *Request) IsValid() error {
+	if len(p.Message) > int(8) {
+		return fmt.Errorf("field Message max_len rule failed, current value: %d", len(p.Message))
+	}
+	_src := "kitex-"
+	if !strings.HasPrefix(p.Message, _src) {
+		return fmt.Errorf("field Message prefix rule failed, current value: %v", p.Message)
+	}
+	return nil
+}
+```
+
+调用`IsValid`进行校验
+
+```go
+		req := &api.Request {
+			//....
+		}
+		err := req.IsValid()
+		if err != nil {
+			//invalid ....
+		}
+
+		//valid ...
+
+```

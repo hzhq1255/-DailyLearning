@@ -16,7 +16,7 @@
 namespace go api
 
 struct Request {
-	1: string message
+	1: string message (vt.max_size = "8", vt.prefix = "kitex-")
 }
 
 struct Response {
