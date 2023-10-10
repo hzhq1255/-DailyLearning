@@ -22,6 +22,41 @@ proto3 语法可参考：[Language Guide(proto3)](https://protobuf.dev/programmi
 
 > [getting-started](https://www.cloudwego.io/zh/docs/kitex/getting-started/)
 
+## 项目结构
+
+```text
+.
+├── build.sh # 构建脚本 sh build.sh
+├── client # 客户端程序
+│   └── main.go
+├── conf # kitex 配置文件
+│   └── kitex.yml
+├── handler.go # 自动生成的 srv 文件
+├── hello.thrift # thrift idl 文件
+├── kitex_gen # kitex 代码生成的文件
+│   └── api
+│       ├── hello
+│       │   ├── client.go
+│       │   ├── hello.go
+│       │   ├── invoker.go
+│       │   └── server.go
+│       ├── hello.go
+│       ├── k-consts.go
+│       └── k-hello.go
+├── kitex_info.yaml # kitex 项目信息
+├── main.go # 服务端程序
+├── output # 构建输出文件夹
+│   ├── bin
+│   │   └── a.b.c
+│   ├── bootstrap.sh
+│   ├── conf
+│   │   └── kitex.yml
+│   └── settings.py
+└── script # 脚本程序
+    ├── bootstrap.sh
+    └── settings.py
+```
+
 
 ## 运行示例代码
 
