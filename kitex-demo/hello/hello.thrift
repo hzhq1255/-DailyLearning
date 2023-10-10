@@ -23,6 +23,18 @@ struct Response {
 	1: string message
 }
 
+struct AddRequest {
+    1: i64 first
+    2: i64 second
+}
+
+struct AddResponse {
+    1: i64 sum
+}
+
+// interface
 service Hello {
+    // func
     Response echo(1: Request req)
+    AddResponse add(1: AddRequest req)
 }

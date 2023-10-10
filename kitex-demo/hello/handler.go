@@ -18,7 +18,7 @@ package main
 import (
 	"context"
 
-	"github.com/cloudwego/kitex-examples/hello/kitex_gen/api"
+	"github.com/hzhq1255/daily-learning/kitex-demo/hello/kitex_gen/api"
 )
 
 // HelloImpl implements the last service interface defined in the IDL.
@@ -28,5 +28,12 @@ type HelloImpl struct{}
 func (s *HelloImpl) Echo(ctx context.Context, req *api.Request) (resp *api.Response, err error) {
 	// TODO: Your code here...
 	resp = &api.Response{Message: req.Message}
+	return
+}
+
+// Add implements the HelloImpl interface.
+func (s *HelloImpl) Add(ctx context.Context, req *api.AddRequest) (resp *api.AddResponse, err error) {
+	// TODO: Your code here...
+	resp = &api.AddResponse{Sum: req.First + req.Second}
 	return
 }

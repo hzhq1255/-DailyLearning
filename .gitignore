@@ -111,3 +111,5 @@ client-go-learning/src/metrics-manager/bin
 **/bin
 **/target
 **/.idea
+**/output
+

@@ -17,12 +17,11 @@ package main
 
 import (
 	"context"
+	"github.com/cloudwego/kitex/client"
+	"github.com/hzhq1255/daily-learning/kitex-demo/hello/kitex_gen/api"
+	"github.com/hzhq1255/daily-learning/kitex-demo/hello/kitex_gen/api/hello"
 	"log"
 	"time"
-
-	"github.com/cloudwego/kitex-examples/hello/kitex_gen/api"
-	"github.com/cloudwego/kitex-examples/hello/kitex_gen/api/hello"
-	"github.com/cloudwego/kitex/client"
 )
 
 func main() {
@@ -37,6 +36,14 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println(resp)
+		time.Sleep(time.Second)
+
+		addReq := &api.AddRequest{First: 5, Second: 10}
+		addResp, err := client.Add(context.Background(), addReq)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(addResp)
 		time.Sleep(time.Second)
 	}
 }

@@ -4,11 +4,10 @@ go 1.20
 
 require (
 	github.com/cloudwego/kitex v0.7.2
-	github.com/cloudwego/kitex-examples v0.2.2
 	github.com/cloudwego/thriftgo v0.3.1 // indirect
 )
 
-replace github.com/apache/thrift v0.16.0 => github.com/apache/thrift v0.13.0
+replace github.com/apache/thrift => github.com/apache/thrift v0.13.0
 
 require (
 	github.com/apache/thrift v0.16.0
@@ -50,4 +49,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526203410-71b5a4ffd15e // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+require (
+	github.com/kr/pretty v0.3.0 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	google.golang.org/grpc v1.55.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
