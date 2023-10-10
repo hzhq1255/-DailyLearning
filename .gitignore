@@ -13,6 +13,7 @@
 
 # Build taget file
 **/target:
+.DS_Store
 
 # Package Files #
 *.jar
