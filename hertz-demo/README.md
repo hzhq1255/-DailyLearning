@@ -123,4 +123,24 @@ curl http://localhost:8888/ping
 
 ```
 
+## 更新代码
+
+`hello.thrift` 添加 `Bye` 方法。
+
+```thrift
+namespace go hello.world
+
+service HelloService {
+    string Hello(1: string name);
+    // add new bye func
+    string Bye(1: string name);
+}
+```
+
+通过 `hz` 命令更新代码
+
+```shell
+hz update -idl hello.thrift
+```
+
 

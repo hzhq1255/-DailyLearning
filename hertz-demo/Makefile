@@ -12,6 +12,10 @@ file_name ?= hello.thrift
 hz-new: download
 	hz new -mod $(project_name) -idl $(file_name)
 
+.PHONY: hz-update
+hz-update:
+	hz update -idl hello.thrift
+
 
 .PHONY: build
 build:
