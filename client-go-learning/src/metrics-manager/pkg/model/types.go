@@ -1,4 +1,4 @@
-package pkg
+package model
 
 type ResourceUsage struct {
 	Reqs        int64 `json:"reqs"`

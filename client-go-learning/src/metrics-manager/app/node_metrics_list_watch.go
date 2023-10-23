@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	"metrics-manager/pkg"
+	"metrics-manager/pkg/kube"
 	"time"
 )
 
@@ -17,7 +17,7 @@ const (
 )
 
 func watchNodeMetrics() {
-	metricsclient := pkg.GetMetricsClient()
+	metricsclient := kube.GetMetricsClient()
 	s, c := cache.NewInformer(&cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return metricsclient.MetricsV1beta1().NodeMetricses().List(context.TODO(), options)

@@ -15,7 +15,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
-	"metrics-manager/pkg"
+	"metrics-manager/pkg/kube"
+	"metrics-manager/pkg/model"
 	myutil "metrics-manager/pkg/util"
 	"strconv"
 	"time"
@@ -29,7 +30,7 @@ const (
 )
 
 func watchNodeMetricsSyncNodeUsageMap() {
-	metricsclient, k8sclient := pkg.GetMetricsClient(), pkg.GetK8sClient()
+	metricsclient, k8sclient := kube.GetMetricsClient(), kube.GetK8sClient()
 	s, c := cache.NewInformer(&cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return metricsclient.MetricsV1beta1().NodeMetricses().List(context.TODO(), options)
@@ -132,12 +133,12 @@ func watchNodeMetricsSyncNodeUsageMap() {
 	s.List()
 }
 
-func getNodeResourceUsages(node v1.Node, nodeMetrics metricsv1beta1.NodeMetrics, podList []v1.Pod) pkg.ResourceUsages {
-	resourceUsages := pkg.ResourceUsages{
-		CPU:              pkg.ResourceUsage{},
-		Memory:           pkg.ResourceUsage{},
-		EphemeralStorage: pkg.ResourceUsage{},
-		PodNum:           pkg.ResourceUsage{},
+func getNodeResourceUsages(node v1.Node, nodeMetrics metricsv1beta1.NodeMetrics, podList []v1.Pod) model.ResourceUsages {
+	resourceUsages := model.ResourceUsages{
+		CPU:              model.ResourceUsage{},
+		Memory:           model.ResourceUsage{},
+		EphemeralStorage: model.ResourceUsage{},
+		PodNum:           model.ResourceUsage{},
 	}
 	allocatable := node.Status.Allocatable
 	if len(allocatable) == 0 {
@@ -145,33 +146,33 @@ func getNodeResourceUsages(node v1.Node, nodeMetrics metricsv1beta1.NodeMetrics,
 	}
 	usage := nodeMetrics.Usage
 	reqs, limits := myutil.GetPodsTotalRequestsAndLimits(&v1.PodList{Items: podList})
-	resourceUsages.CPU = func() pkg.ResourceUsage {
+	resourceUsages.CPU = func() model.ResourceUsage {
 		req, limit, alloc, usage := reqs[v1.ResourceCPU], limits[v1.ResourceCPU], allocatable[v1.ResourceCPU], usage[v1.ResourceCPU]
-		return pkg.ResourceUsage{
+		return model.ResourceUsage{
 			Reqs:        req.MilliValue(),
 			Limits:      limit.MilliValue(),
 			Allocatable: alloc.MilliValue(),
 			Usage:       usage.MilliValue(),
 		}
 	}()
-	resourceUsages.Memory = func() pkg.ResourceUsage {
+	resourceUsages.Memory = func() model.ResourceUsage {
 		req, limit, alloc, usage := reqs[v1.ResourceMemory], limits[v1.ResourceMemory], allocatable[v1.ResourceMemory], usage[v1.ResourceMemory]
-		return pkg.ResourceUsage{
+		return model.ResourceUsage{
 			Reqs:        req.Value(),
 			Limits:      limit.Value(),
 			Allocatable: alloc.Value(),
 			Usage:       usage.Value(),
 		}
 	}()
-	resourceUsages.PodNum = func() pkg.ResourceUsage {
-		return pkg.ResourceUsage{
+	resourceUsages.PodNum = func() model.ResourceUsage {
+		return model.ResourceUsage{
 			Allocatable: allocatable.Pods().Value(),
 			Usage:       int64(len(podList)),
 		}
 	}()
-	resourceUsages.PodNum = func() pkg.ResourceUsage {
+	resourceUsages.PodNum = func() model.ResourceUsage {
 		req, limit, alloc := reqs[v1.ResourceEphemeralStorage], limits[v1.ResourceEphemeralStorage], allocatable[v1.ResourceEphemeralStorage]
-		return pkg.ResourceUsage{
+		return model.ResourceUsage{
 			Reqs:        req.Value(),
 			Limits:      limit.Value(),
 			Allocatable: alloc.Value(),
@@ -183,8 +184,8 @@ func getNodeResourceUsages(node v1.Node, nodeMetrics metricsv1beta1.NodeMetrics,
 }
 
 func nodeMetricsWatch() {
-	metricsclient := pkg.GetMetricsClient()
-	k8sclient := pkg.GetK8sClient()
+	metricsclient := kube.GetMetricsClient()
+	k8sclient := kube.GetK8sClient()
 	s, c := cache.NewInformer(&cache.ListWatch{
 		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 			return metricsclient.MetricsV1beta1().NodeMetricses().List(context.TODO(), options)
@@ -250,36 +251,36 @@ func nodeMetricsWatch() {
 					}
 
 					//usageMapJson, _ := json.Marshal(usageMap)
-					nodeResourceUsages := pkg.ResourceUsages{
-						CPU: func() pkg.ResourceUsage {
+					nodeResourceUsages := model.ResourceUsages{
+						CPU: func() model.ResourceUsage {
 							req, limit := reqs[v1.ResourceCPU], limits[v1.ResourceCPU]
-							return pkg.ResourceUsage{
+							return model.ResourceUsage{
 								Reqs:        req.MilliValue(),
 								Limits:      limit.MilliValue(),
 								Allocatable: allocatable.Cpu().MilliValue(),
 								Usage:       nodeMetrics.Usage.Cpu().MilliValue(),
 							}
 						}(),
-						Memory: func() pkg.ResourceUsage {
+						Memory: func() model.ResourceUsage {
 							req, limit := reqs[v1.ResourceMemory], limits[v1.ResourceMemory]
-							return pkg.ResourceUsage{
+							return model.ResourceUsage{
 								Reqs:        req.Value(),
 								Limits:      limit.Value(),
 								Allocatable: allocatable.Memory().Value(),
 								Usage:       nodeMetrics.Usage.Memory().Value(),
 							}
 						}(),
-						EphemeralStorage: func() pkg.ResourceUsage {
+						EphemeralStorage: func() model.ResourceUsage {
 							req, limit := reqs[v1.ResourceEphemeralStorage], limits[v1.ResourceEphemeralStorage]
-							return pkg.ResourceUsage{
+							return model.ResourceUsage{
 								Reqs:        req.Value(),
 								Limits:      limit.Value(),
 								Allocatable: allocatable.StorageEphemeral().Value(),
 								Usage:       req.Value(),
 							}
 						}(),
-						PodNum: func() pkg.ResourceUsage {
-							return pkg.ResourceUsage{
+						PodNum: func() model.ResourceUsage {
+							return model.ResourceUsage{
 								Allocatable: allocatable.Pods().Value(),
 								Usage:       int64(len(podList.Items)),
 							}
@@ -299,7 +300,7 @@ func getRequestsAndLimits() {
 
 }
 
-func syncResourceQuota(nodeMetrics metricsv1beta1.NodeMetrics, reosurceUsage pkg.ResourceUsages) {
+func syncResourceQuota(nodeMetrics metricsv1beta1.NodeMetrics, reosurceUsage model.ResourceUsages) {
 	annotation := nodeMetrics.Annotations
 	if annotation == nil {
 		annotation = make(map[string]string)
@@ -312,9 +313,9 @@ func syncResourceQuota(nodeMetrics metricsv1beta1.NodeMetrics, reosurceUsage pkg
 
 }
 
-func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics, node v1.Node, nodeResourceUsages pkg.ResourceUsages) (*pkg.ClusterResourceUsages, error) {
+func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics, node v1.Node, nodeResourceUsages model.ResourceUsages) (*model.ClusterResourceUsages, error) {
 	usageCmName := "cluster-usage-cm"
-	k8sclient := pkg.GetK8sClient()
+	k8sclient := kube.GetK8sClient()
 	usageCm, err := k8sclient.CoreV1().ConfigMaps(DefaultNamespace).Get(context.TODO(), usageCmName, metav1.GetOptions{})
 	cmNotFound := false
 	if errors.IsNotFound(err) {
@@ -361,7 +362,7 @@ func applyUsageConfigMap(nodeMetrics metricsv1beta1.NodeMetrics, node v1.Node, n
 }
 
 func testPatch() {
-	k8sclient := pkg.GetK8sClient()
+	k8sclient := kube.GetK8sClient()
 	nodeApplyCfg := applycorev1.Node("k3d-mycluster-server-0")
 	nodeApplyCfg.Annotations = map[string]string{
 		"a": "b",
