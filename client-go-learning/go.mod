@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/choleraehyq/pid v0.0.17 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
