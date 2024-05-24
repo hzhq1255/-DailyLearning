@@ -2,14 +2,18 @@ package helm
 
 import (
 	"fmt"
-	"log"
-
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/registry"
+	"log"
+	"net/http"
 )
 
 var _ GlobalOptions = (*GlobalOption)(nil)
 var _ ListOptions = (*ListOption)(nil)
+var _ GetValuesOptions = (*GetValuesOption)(nil)
+var _ StatusOptions = (*StatusOption)(nil)
+var _ PullOptions = (*PullOption)(nil)
 var _ InstallOptions = (*InstallOption)(nil)
 var _ UpgradeOptions = (*UpgradeOption)(nil)
 var _ UninstallOptions = (*UninstallOption)(nil)
@@ -17,10 +21,26 @@ var _ UninstallOptions = (*UninstallOption)(nil)
 type GlobalOptions interface {
 	GetSettings() *cli.EnvSettings
 	SetSettings(settings *cli.EnvSettings)
-	ApplyNamesapce(val string)
+	ApplyNamespace(val string)
 	ApplyKubeApiServer(val string)
 	ApplyKubeToken(val string)
 	ApplyKubeInsecureSkipTLSVerify(val bool)
+}
+
+type GetOptions interface {
+}
+
+type GetValuesOptions interface {
+	GlobalOptions
+	ApplyRevision(val int)
+	ApplyAll(val bool)
+	Build() (*action.GetValues, error)
+}
+
+type StatusOptions interface {
+	GlobalOptions
+	ApplyReleaseName(val string)
+	Build() (*action.Status, error)
 }
 
 type ListOptions interface {
@@ -28,6 +48,11 @@ type ListOptions interface {
 	ApplyAllNamespaces(val bool)
 	ApplyFilter(val string)
 	Build() (*action.List, error)
+}
+
+type PullOptions interface {
+	GlobalOptions
+	Build() (*action.Pull, error)
 }
 
 type InstallOptions interface {
@@ -42,6 +67,7 @@ type InstallOptions interface {
 type UpgradeOptions interface {
 	GlobalOptions
 	ApplyReleaseName(val string)
+	ApplyInstall(val bool)
 	ApplyDryRun(val bool)
 	ApplyForce(val bool)
 	Build() (*action.Upgrade, error)
@@ -52,6 +78,10 @@ type UninstallOptions interface {
 	ApplyDryRun(val bool)
 	ApplyIgnoreNotFound(val bool)
 	Build() (*action.Uninstall, error)
+}
+
+func NewListOptions() ListOptions {
+	return &ListOption{List: &action.List{}}
 }
 
 type GlobalOption struct {
@@ -83,8 +113,8 @@ func (g *GlobalOption) ApplyKubeToken(val string) {
 	g.KubeToken = val
 }
 
-// ApplyNamesapce implements GlobalOptions.
-func (g *GlobalOption) ApplyNamesapce(val string) {
+// ApplyNamespace implements GlobalOptions.
+func (g *GlobalOption) ApplyNamespace(val string) {
 	g.SetNamespace(val)
 }
 
@@ -98,16 +128,56 @@ func (g *GlobalOption) GetActionConfig() (*action.Configuration, error) {
 	return actionConfig, nil
 }
 
+type GetValuesOption struct {
+	GlobalOption
+	*action.GetValues
+}
+
+func (opt *GetValuesOption) ApplyRevision(val int) {
+	opt.Version = val
+}
+
+func (opt *GetValuesOption) ApplyAll(val bool) {
+	opt.AllValues = val
+}
+
+func (opt *GetValuesOption) Build() (*action.GetValues, error) {
+	actionConfig, err := opt.GlobalOption.GetActionConfig()
+	if err != nil {
+		return nil, err
+	}
+	client := action.NewGetValues(actionConfig)
+	client.AllValues = opt.AllValues
+	opt.GetValues = client
+	return client, nil
+}
+
+type StatusOption struct {
+	GlobalOption
+	ReleaseName string
+	*action.Status
+}
+
+func (s *StatusOption) ApplyReleaseName(val string) {
+	s.ReleaseName = val
+}
+
+func (s *StatusOption) Build() (*action.Status, error) {
+	actionConfig, err := s.GlobalOption.GetActionConfig()
+	if err != nil {
+		return nil, err
+	}
+	client := action.NewStatus(actionConfig)
+	s.Status = client
+	return client, nil
+}
+
 type ListOption struct {
 	GlobalOption
 	*action.List
 }
 
-func NewListOptions() ListOptions {
-	return &ListOption{List: &action.List{}}
-}
-
-// ApplyAllNamespace implements ListOptions.
+// ApplyAllNamespaces implements ListOptions.
 func (l *ListOption) ApplyAllNamespaces(val bool) {
 	l.AllNamespaces = val
 }
@@ -128,6 +198,25 @@ func (l *ListOption) Build() (*action.List, error) {
 	client.Filter = l.Filter
 	l.List = client
 	return client, nil
+}
+
+type PullOption struct {
+	GlobalOption
+	*action.Pull
+}
+
+func (p *PullOption) Build() (*action.Pull, error) {
+	client, err := registry.NewClient(
+		registry.ClientOptHTTPClient(http.DefaultClient),
+		registry.ClientOptPlainHTTP())
+	if err != nil {
+		return nil, err
+	}
+	pull := action.NewPull()
+	pull.SetRegistryClient(client)
+	p.Pull.InsecureSkipTLSverify = true
+	p.Pull = pull
+	return pull, nil
 }
 
 type InstallOption struct {
@@ -151,7 +240,7 @@ func (opt *InstallOption) ApplyReleaseName(val string) {
 	opt.ReleaseName = val
 }
 
-// ApplyReleaseName implements InstallOptions.
+// ApplyValues implements InstallOptions.
 func (opt *InstallOption) ApplyValues(val map[string]interface{}) {
 	opt.Values = val
 }
@@ -173,8 +262,37 @@ func (opt *InstallOption) Build() (*action.Install, error) {
 
 type UpgradeOption struct {
 	GlobalOption
+	ReleaseName string
 	*action.Upgrade
 	Values map[string]interface{}
+}
+
+func (opt *UpgradeOption) ApplyReleaseName(val string) {
+	opt.ReleaseName = val
+}
+
+func (opt *UpgradeOption) ApplyInstall(val bool) {
+	opt.Install = val
+}
+
+func (opt *UpgradeOption) ApplyDryRun(val bool) {
+	opt.DryRun = val
+}
+
+func (opt *UpgradeOption) ApplyForce(val bool) {
+	opt.Force = val
+}
+
+func (opt *UpgradeOption) Build() (*action.Upgrade, error) {
+	actionConfig, err := opt.GlobalOption.GetActionConfig()
+	if err != nil {
+		return nil, err
+	}
+	client := action.NewUpgrade(actionConfig)
+	client.DryRun = opt.DryRun
+	client.Force = opt.Force
+	opt.Upgrade = client
+	return client, nil
 }
 
 type UninstallOption struct {
