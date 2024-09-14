@@ -171,5 +171,6 @@ func (r *MyDeploymentReconciler) reconcileDelete(ctx context.Context, obj *demov
 func (r *MyDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&demov1.MyDeployment{}).
+		Owns(&v1.Pod{}).
 		Complete(r)
 }
