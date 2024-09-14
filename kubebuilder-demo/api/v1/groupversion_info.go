@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2024.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1beta1 contains API Schema definitions for the metrics.k8s.io v1beta1 API group
+// Package v1 contains API Schema definitions for the demo v1 API group
 // +kubebuilder:object:generate=true
-// +groupName=metrics.k8s.io
-package v1beta1
+// +groupName=demo.my.domain
+package v1
 
 import (
-	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = metricsv1beta1.SchemeGroupVersion
+	GroupVersion = schema.GroupVersion{Group: "demo.my.domain", Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
-	SchemeBuilder = metricsv1beta1.SchemeBuilder
+	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
 
 	// AddToScheme adds the types in this group-version to the given scheme.
 	AddToScheme = SchemeBuilder.AddToScheme
