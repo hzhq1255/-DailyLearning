@@ -107,8 +107,8 @@ func (r *MyDeploymentReconciler) reconcileReplicas(ctx context.Context, obj *dem
 		replicas = *obj.Spec.Replicas
 	}
 	replicasDiff := replicas - int64(len(filteredPods))
-	if replicasDiff < 0 {
-		for i := 0; i < int(-replicasDiff); i++ {
+	if replicasDiff > 0 {
+		for i := 0; i < int(replicasDiff); i++ {
 			// create pods
 			pod := r.GeneratePod(ctx, obj)
 			if err := r.Client.Create(ctx, pod); err != nil {
@@ -116,7 +116,7 @@ func (r *MyDeploymentReconciler) reconcileReplicas(ctx context.Context, obj *dem
 			}
 		}
 	} else {
-		for i := replicas; i < replicasDiff; i++ {
+		for i := 0; i < int(-replicasDiff); i++ {
 			pod := filteredPods[i]
 			// delete additional pod
 			if err := r.Client.Delete(ctx, &pod); err != nil {
