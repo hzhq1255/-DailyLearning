@@ -124,7 +124,8 @@ func (r *MyDeploymentReconciler) reconcileReplicas(ctx context.Context, obj *dem
 			}
 		}
 	}
-	return ctrl.Result{}, err
+	// alter 10 seconds re control pod replicas
+	return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 }
 
 func (r *MyDeploymentReconciler) GeneratePod(_ context.Context, obj *demov1.MyDeployment) *v1.Pod {
