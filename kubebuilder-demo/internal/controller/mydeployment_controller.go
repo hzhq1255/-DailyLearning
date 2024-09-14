@@ -111,7 +111,7 @@ func (r *MyDeploymentReconciler) reconcileReplicas(ctx context.Context, obj *dem
 		for i := 0; i < int(-replicasDiff); i++ {
 			// create pods
 			pod := r.GeneratePod(ctx, obj)
-			if err := r.Client.Create(ctx, &pod); err != nil {
+			if err := r.Client.Create(ctx, pod); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
