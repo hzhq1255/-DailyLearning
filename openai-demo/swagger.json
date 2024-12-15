@@ -1,0 +1,222 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Kubernetes Pod API",
+      "version": "1.0.0",
+      "description": "A simplified Kubernetes API to manage Pods"
+    },
+    "servers": [
+      {
+        "url": "https://api.kubernetes.local"
+      }
+    ],
+    "paths": {
+      "/api/v1/pods": {
+        "get": {
+          "summary": "List all Pods",
+          "operationId": "listPods",
+          "tags": ["Pod"],
+          "responses": {
+            "200": {
+              "description": "A list of Pods",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Pod"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Create a new Pod",
+          "operationId": "createPod",
+          "tags": ["Pod"],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pod"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Pod created successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Pod"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/pods/{name}": {
+        "get": {
+          "summary": "Get details of a specific Pod",
+          "operationId": "getPod",
+          "tags": ["Pod"],
+          "parameters": [
+            {
+              "name": "name",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Name of the Pod"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Pod details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Pod"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Pod not found"
+            }
+          }
+        },
+        "put": {
+          "summary": "Update an existing Pod",
+          "operationId": "updatePod",
+          "tags": ["Pod"],
+          "parameters": [
+            {
+              "name": "name",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Name of the Pod"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pod"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pod updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Pod"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Pod not found"
+            }
+          }
+        },
+        "delete": {
+          "summary": "Delete a specific Pod",
+          "operationId": "deletePod",
+          "tags": ["Pod"],
+          "parameters": [
+            {
+              "name": "name",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "Name of the Pod"
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Pod deleted successfully"
+            },
+            "404": {
+              "description": "Pod not found"
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Pod": {
+          "type": "object",
+          "properties": {
+            "metadata": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the pod"
+                },
+                "namespace": {
+                  "type": "string",
+                  "description": "The namespace in which the pod is located"
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "Key-value pairs for labels"
+                }
+              }
+            },
+            "spec": {
+              "type": "object",
+              "properties": {
+                "containers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "The name of the container"
+                      },
+                      "image": {
+                        "type": "string",
+                        "description": "The container image"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "status": {
+              "type": "object",
+              "properties": {
+                "phase": {
+                  "type": "string",
+                  "description": "The current phase of the Pod"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
