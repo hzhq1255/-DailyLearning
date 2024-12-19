@@ -113,3 +113,11 @@ client-go-learning/src/metrics-manager/bin
 **/.idea
 **/output
 
+
+
+
+openai-demo/openai/*
+openai-demo/openai/**/
+openai-demo/sdk/*
+openai-demo/sdk/**/
+openai-demo/src/__pycache__/*

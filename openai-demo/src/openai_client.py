@@ -2,10 +2,10 @@ from openai import OpenAI
 import os
 import glob
 
-api_key = os.getenv("OPENAI_API_KEY")
-base_url = os.getenv("OPENAI_API_BASE_URL")
+# api_key = os.getenv("OPENAI_API_KEY")
+# base_url = os.getenv("OPENAI_API_BASE_URL")
 
-client = OpenAI(
+client: OpenAI = OpenAI(
     base_url=base_url,
     api_key=api_key
 )
