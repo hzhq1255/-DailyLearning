@@ -6,7 +6,7 @@ import glob
 # base_url = os.getenv("OPENAI_API_BASE_URL")
 
 client: OpenAI = OpenAI(
-    base_url=base_url,
+    base_url=base_url+,
     api_key=api_key
 )
 
