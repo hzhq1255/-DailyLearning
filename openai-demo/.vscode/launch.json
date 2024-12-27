@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Python: Debug src/doc.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/doc.py",  // 指定要调试的 Python 文件
+            "console": "externalTerminal",
+            "cwd": "${workspaceFolder}",  // 设置工作目录为项目的根目录
+            "env": {  // 可以在这里设置环境变量（如果需要）
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+        }
+    ]
+}
